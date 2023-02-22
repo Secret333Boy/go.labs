@@ -8,7 +8,6 @@ func main() {
 
 	fmt.Println("Hello world!")
 
-	var test_lint string
 }
 func checkActions() {
 	var i int
