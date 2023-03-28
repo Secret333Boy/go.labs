@@ -3,6 +3,11 @@
 
 name: Go
 
+defaults:
+   run:
+    shell: bash
+    working-directory: ./packages/server
+
 on:
   push:
     branches: ["master"]
@@ -21,10 +26,10 @@ jobs:
           go-version: 1.19
 
       - name: Build
-        run: cd ./packages/server && go build -v ./...
+        run: go build -v ./...
 
       - name: Test
-        run: cd ./packages/server && go test -v ./...
+        run: go test -v ./...
 
   golangci:
     name: lint
@@ -34,8 +39,6 @@ jobs:
         with:
           go-version: 1.19
       - uses: actions/checkout@v3
-
-      - run: cd ./packages/server
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
