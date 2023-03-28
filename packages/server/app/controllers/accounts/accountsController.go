@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	models "go.labs/app/models"
-	accountsService "go.labs/app/services/accounts"
+	models "go.labs/server/app/models"
+	accountsService "go.labs/server/app/services/accounts"
 )
 
 func GetAccountsRouter() *http.ServeMux {

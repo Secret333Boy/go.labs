@@ -1,6 +1,6 @@
 package main
 
-import "go.labs/app"
+import "go.labs/server/app"
 
 func main() {
 	app.Run()

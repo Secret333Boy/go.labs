@@ -1,3 +1,3 @@
-module go.labs
+module go.labs/server
 
 go 1.19

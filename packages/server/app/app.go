@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	accountsController "go.labs/app/controllers/accounts"
+	accountsController "go.labs/server/app/controllers/accounts"
 )
 
 func Run() {

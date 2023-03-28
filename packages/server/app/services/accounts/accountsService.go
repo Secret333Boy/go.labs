@@ -1,7 +1,7 @@
 package accountsService
 
 import (
-	models "go.labs/app/models"
+	models "go.labs/server/app/models"
 )
 
 var accountModel = models.NewAccountModel()
