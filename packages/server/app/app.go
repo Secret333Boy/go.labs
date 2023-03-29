@@ -9,10 +9,14 @@ import (
 )
 
 func Run() {
-	router := http.NewServeMux()
+	router := Router{}
+
+	// router.HandleFunc("GET", "/", func(w http.ResponseWriter, r *http.Request) {
+	// 	fmt.Fprintf(w, "go.labs API 1.0")
+	// })
 
 	router.Handle("/accounts", accountsController.GetAccountsRouter())
 
 	fmt.Println("Server started on port " + "8081")
-	log.Fatal(http.ListenAndServe(":8081", router))
+	log.Fatal(http.ListenAndServe(":8081", &router))
 }

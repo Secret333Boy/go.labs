@@ -2,7 +2,6 @@ package accountsController
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	models "go.labs/server/app/models"
@@ -13,7 +12,6 @@ func GetAccountsRouter() *http.ServeMux {
 	router := http.NewServeMux()
 
 	router.HandleFunc("/", indexHandler)
-
 	return router
 }
 
@@ -22,8 +20,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		var err = json.NewEncoder(w).Encode(accountsService.GetAllAccounts())
 		if err != nil {
-			log.Fatal(err)
-			http.Error(w, "Failed", http.StatusInternalServerError)
+			http.Error(w, "Failed read json file", http.StatusInternalServerError)
 		}
 
 	case http.MethodPost:
