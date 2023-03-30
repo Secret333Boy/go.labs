@@ -13,8 +13,9 @@ type route struct {
 }
 
 type Router struct {
-	routes []*route
-	root   string
+	routes      []*route
+	root        string
+	usedRouters []*Router
 }
 
 func NewRouter() *Router {
@@ -51,31 +52,51 @@ func (router *Router) All(pattern string, handler func(http.ResponseWriter, *htt
 }
 
 func (router *Router) Use(pattern string, router2 *Router) {
-	router.Handle(pattern, router2)
+	unifiedPattern := pattern
+
+	if unifiedPattern[len(unifiedPattern)-1] != '*' {
+		unifiedPattern = unifiedPattern + "*"
+	}
+
+	if unifiedPattern[len(unifiedPattern)-2] != '/' {
+		unifiedPattern = unifiedPattern[:len(unifiedPattern)-1] + "/*"
+	}
+
+	router.Handle(unifiedPattern, router2)
 
 	router2.root = pattern
 
 	if pattern[len(pattern)-1] == '/' {
 		router2.root = pattern[:len(pattern)-1]
 	}
+
+	for _, usedRouter := range router2.usedRouters {
+		usedRouter.root = router2.root + usedRouter.root
+	}
+
+	router.usedRouters = append(router.usedRouters, router2)
 }
 
 func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	for _, route := range router.routes {
-		routerRegExpEnd := "/?"
+		routerRegExpEnd := "/?$"
 		if route.pattern[len(route.pattern)-1] == '/' {
-			routerRegExpEnd = "?"
+			routerRegExpEnd = "?$"
 		}
 
-		patternRegexp, err := regexp.Compile("^" + router.root + route.pattern + routerRegExpEnd + "$")
+		if route.pattern[len(route.pattern)-1] == '*' {
+			routerRegExpEnd = ""
+		}
+
+		patternRegexp, err := regexp.Compile("^" + router.root + route.pattern + routerRegExpEnd)
 
 		if err != nil {
 			continue
 		}
 
 		/*Only for debugging!*/
-		// fmt.Println(w, "\nMethod: "+r.Method+"\nURL path: "+r.URL.Path+"\nRegexp"+patternRegexp.String()+"\nRouter root: "+router.root)
+		// fmt.Println(w, "\nMethod: "+r.Method+"\nURL path: "+r.URL.Path+"\nRegexp: "+patternRegexp.String()+"\nRouter root: "+router.root)
 		if (r.Method == route.method || route.method == "*") && patternRegexp.MatchString(r.URL.Path) {
 			route.handler.ServeHTTP(w, r)
 			return
