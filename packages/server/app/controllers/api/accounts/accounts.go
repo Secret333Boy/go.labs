@@ -2,6 +2,7 @@ package accounts
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"go.labs/server/app/models"
@@ -24,6 +25,10 @@ func GetAccountsRouter() *router.Router {
 		var account models.Account
 		json.NewDecoder(r.Body).Decode(&account)
 		accountsService.AddAccount(&account)
+	})
+
+	router.Get("/.*", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Here we will handle params")
 	})
 
 	return router

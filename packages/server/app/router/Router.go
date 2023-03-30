@@ -54,11 +54,11 @@ func (router *Router) All(pattern string, handler func(http.ResponseWriter, *htt
 func (router *Router) Use(pattern string, router2 *Router) {
 	unifiedPattern := pattern
 
-	if unifiedPattern[len(unifiedPattern)-1] != '*' {
+	if len(unifiedPattern) > 0 && unifiedPattern[len(unifiedPattern)-1] != '*' {
 		unifiedPattern = unifiedPattern + "*"
 	}
 
-	if unifiedPattern[len(unifiedPattern)-2] != '/' {
+	if len(unifiedPattern) > 1 && unifiedPattern[len(unifiedPattern)-2] != '/' {
 		unifiedPattern = unifiedPattern[:len(unifiedPattern)-1] + "/*"
 	}
 
