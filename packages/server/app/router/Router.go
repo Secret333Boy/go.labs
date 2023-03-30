@@ -1,6 +1,10 @@
-package app
+package router
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+	"regexp"
+)
 
 type route struct {
 	pattern string
@@ -10,6 +14,12 @@ type route struct {
 
 type Router struct {
 	routes []*route
+	root   string
+}
+
+func NewRouter() *Router {
+	router := &Router{}
+	return router
 }
 
 func (router *Router) Handle(pattern string, handler http.Handler) {
@@ -36,6 +46,42 @@ func (router *Router) Delete(pattern string, handler func(http.ResponseWriter, *
 	router.handleFunc(http.MethodDelete, pattern, handler)
 }
 
+func (router *Router) All(pattern string, handler func(http.ResponseWriter, *http.Request)) {
+	router.handleFunc("*", pattern, handler)
+}
+
+func (router *Router) Use(pattern string, router2 *Router) {
+	router.Handle(pattern, router2)
+
+	router2.root = pattern
+
+	if pattern[len(pattern)-1] == '/' {
+		router2.root = pattern[:len(pattern)-1]
+	}
+}
+
 func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	router.routes[0].handler.ServeHTTP(w, r)
+
+	for _, route := range router.routes {
+		routerRegExpEnd := "/?"
+		if route.pattern[len(route.pattern)-1] == '/' {
+			routerRegExpEnd = "?"
+		}
+
+		patternRegexp, err := regexp.Compile("^" + router.root + route.pattern + routerRegExpEnd + "$")
+
+		if err != nil {
+			continue
+		}
+
+		/*Only for debugging!*/
+		// fmt.Println(w, "\nMethod: "+r.Method+"\nURL path: "+r.URL.Path+"\nRegexp"+patternRegexp.String()+"\nRouter root: "+router.root)
+		if (r.Method == route.method || route.method == "*") && patternRegexp.MatchString(r.URL.Path) {
+			route.handler.ServeHTTP(w, r)
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusNotFound)
+	fmt.Fprintf(w, "Not found "+r.URL.Path)
 }

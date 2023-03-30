@@ -5,18 +5,13 @@ import (
 	"log"
 	"net/http"
 
-	accountsController "go.labs/server/app/controllers/accounts"
+	"go.labs/server/app/controllers"
 )
 
 func Run() {
-	router := Router{}
 
-	// router.HandleFunc("GET", "/", func(w http.ResponseWriter, r *http.Request) {
-	// 	fmt.Fprintf(w, "go.labs API 1.0")
-	// })
-
-	router.Handle("/accounts", accountsController.GetAccountsRouter())
+	var router = controllers.GetIndexRouter()
 
 	fmt.Println("Server started on port " + "8081")
-	log.Fatal(http.ListenAndServe(":8081", &router))
+	log.Fatal(http.ListenAndServe(":8081", router))
 }
