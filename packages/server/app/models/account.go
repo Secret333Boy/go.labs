@@ -1,4 +1,4 @@
-package AccountModel
+package models
 
 type Account struct {
 	Id        int
@@ -9,6 +9,7 @@ type Account struct {
 
 type AccountModel struct {
 	accounts []Account
+	lastId   int
 }
 
 func NewAccountModel() *AccountModel {
@@ -33,7 +34,9 @@ func (model *AccountModel) FindOne(id int) *Account {
 
 func (model *AccountModel) Add(account *Account) {
 	account.model = model
+	account.Id = model.lastId + 1
 	model.accounts = append(model.accounts, *account)
+	model.lastId++
 }
 
 func (model *AccountModel) Delete(id int) {
