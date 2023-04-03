@@ -70,16 +70,16 @@ func (authService *authService) Login(loginDto *dtos.RegisterDto) (*Tokens, erro
 	return &Tokens{accessToken, refreshToken}, nil
 }
 
-func (authService *authService) Validate(tokenString string) error {
+func (authService *authService) Validate(tokenString string) (*models.Account, error) {
 	token, err := Decrypt(tokenString, false)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 
 	if !ok || !token.Valid {
-		return errors.New("invalid JWT Token")
+		return nil, errors.New("invalid JWT Token")
 	}
 
 	email := fmt.Sprint(claims["email"])
@@ -88,14 +88,14 @@ func (authService *authService) Validate(tokenString string) error {
 	account := authService.accountsService.GetOneByEmail(email)
 
 	if account == nil {
-		return errors.New("account not found")
+		return nil, errors.New("account not found")
 	}
 
 	if account.Hash != hash {
-		return errors.New("hash is invalid")
+		return nil, errors.New("hash is invalid")
 	}
 
-	return nil
+	return account, nil
 }
 
 func (authService *authService) Refresh(tokenString string) (*Tokens, error) {

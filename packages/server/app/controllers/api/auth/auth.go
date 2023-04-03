@@ -78,7 +78,7 @@ func GetAuthRouter() *router.Router {
 		header := r.Header.Get("Authorization")
 
 		token := strings.Replace(header, "Bearer ", "", 1)
-		err := authService.Validate(token)
+		_, err := authService.Validate(token)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
