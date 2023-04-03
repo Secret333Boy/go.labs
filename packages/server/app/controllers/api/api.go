@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"go.labs/server/app/controllers/api/accounts"
+	"go.labs/server/app/controllers/api/auth"
 	"go.labs/server/app/router"
 )
 
@@ -16,6 +17,7 @@ func GetAPIRouter() *router.Router {
 	})
 
 	router.Use("/accounts", accounts.GetAccountsRouter())
+	router.Use("/auth", auth.GetAuthRouter())
 
 	return router
 }
