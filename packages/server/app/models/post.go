@@ -73,8 +73,8 @@ func (model *PostModel) Add(post *Post) {
 func (model *PostModel) Update(id int, updatedPost *Post) {
 	for _, post := range model.posts {
 		if post.Id == id {
-			model.posts[id].Title = updatedPost.Title
-			model.posts[id].Description = updatedPost.Description
+			model.posts[id-1].Title = updatedPost.Title
+			model.posts[id-1].Description = updatedPost.Description
 		}
 	}
 }
