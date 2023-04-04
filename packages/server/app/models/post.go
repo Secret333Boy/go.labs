@@ -53,6 +53,15 @@ func (model *PostModel) FindOne(id int) *Post {
 	return nil
 }
 
+func (model *PostModel) FindAccountByPostId(id int) *Account {
+	for _, post := range model.posts {
+		if post.Id == id {
+			return post.Account
+		}
+	}
+	return nil
+}
+
 func (model *PostModel) Add(post *Post) {
 	post.model = model
 	post.Id = model.lastId + 1
