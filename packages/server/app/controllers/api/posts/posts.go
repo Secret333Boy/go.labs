@@ -14,6 +14,7 @@ import (
 func GetPostsRouter() *httprouter.Router {
 	router := httprouter.New()
 	postsService := services.PostsService
+
 	//get all posts
 	router.GET("/api/posts", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		_, err := middlewares.UseAuth(w, r)
@@ -35,7 +36,7 @@ func GetPostsRouter() *httprouter.Router {
 		if err != nil {
 			http.Error(w, "Failed encoding json", http.StatusInternalServerError)
 		}
-
+		//TODO: count pages and set default limit and offset
 	})
 
 	//create new post
@@ -78,6 +79,28 @@ func GetPostsRouter() *httprouter.Router {
 		if err != nil {
 			http.Error(w, "Failed encoding json", http.StatusInternalServerError)
 		}
+	})
+
+	//TODO: add update for post by id
+
+	//delete post by id
+	router.DELETE("/api/posts/:id", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		_, err := middlewares.UseAuth(w, r)
+		if err != nil {
+			return
+		}
+
+		id, err := strconv.Atoi(ps.ByName("id"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		postsService.RemovePost(id)
 	})
 
 	return router
