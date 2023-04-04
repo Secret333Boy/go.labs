@@ -34,7 +34,7 @@ func GetPostsRouter() *httprouter.Router {
 		if err != nil {
 			http.Error(w, "Failed encoding json", http.StatusInternalServerError)
 		}
-		//TODO: count pages and set default limit and offset
+		//TODO: count pages
 	})
 
 	//create new post
@@ -145,19 +145,17 @@ func GetPostsRouter() *httprouter.Router {
 
 		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+			limit = 10
 		}
 		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+			offset = 0
 		}
 		err = json.NewEncoder(w).Encode(postsService.GetAllMessagesByPostId(id, limit, offset))
 		if err != nil {
 			http.Error(w, "Failed encoding json", http.StatusInternalServerError)
 		}
-		//TODO: count pages and set default limit and offset
+		//TODO: count pages
 	})
 
 	//create new message
