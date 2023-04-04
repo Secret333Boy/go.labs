@@ -2,9 +2,10 @@ package services
 
 import (
 	"errors"
+	"time"
+
 	"go.labs/server/app/controllers/api/posts/dtos"
 	"go.labs/server/app/models"
-	"time"
 )
 
 type postsService struct {

@@ -2,11 +2,12 @@ package posts
 
 import (
 	"encoding/json"
+	"net/http"
+	"strconv"
+
 	"go.labs/server/app/controllers/api/posts/dtos"
 	"go.labs/server/app/middlewares"
 	"go.labs/server/app/services"
-	"net/http"
-	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 )

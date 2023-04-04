@@ -2,8 +2,9 @@ package api
 
 import (
 	"fmt"
-	"go.labs/server/app/controllers/api/posts"
 	"net/http"
+
+	"go.labs/server/app/controllers/api/posts"
 
 	"go.labs/server/app/controllers/api/accounts"
 	"go.labs/server/app/controllers/api/auth"
