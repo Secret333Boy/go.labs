@@ -80,34 +80,38 @@ func GetPostsRouter() *httprouter.Router {
 			http.Error(w, "Failed encoding json", http.StatusInternalServerError)
 		}
 	})
-	//
-	////update post by id
-	//router.PATCH("/api/posts/:id", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	//	account, err := middlewares.UseAuth(w, r)
-	//	if err != nil {
-	//		return
-	//	}
-	//
-	//	id, err := strconv.Atoi(ps.ByName("id"))
-	//	if err != nil {
-	//		http.Error(w, err.Error(), http.StatusBadRequest)
-	//		return
-	//	}
-	//
-	//	createPostDto := &dtos.CreatePostDto{}
-	//	err = json.NewDecoder(r.Body).Decode(createPostDto)
-	//	if err != nil {
-	//		http.Error(w, err.Error(), http.StatusBadRequest)
-	//		return
-	//	}
-	//
-	//	validationErr := createPostDto.Validate()
-	//	if validationErr != nil {
-	//		http.Error(w, validationErr.Error(), http.StatusBadRequest)
-	//		return
-	//	}
-	//	postsService.AddPost(account, createPostDto)
-	//}
+
+	//update post by id
+	router.PATCH("/api/posts/:id", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		account, err := middlewares.UseAuth(w, r)
+		if err != nil {
+			return
+		}
+
+		id, err := strconv.Atoi(ps.ByName("id"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		createPostDto := &dtos.CreatePostDto{}
+		err = json.NewDecoder(r.Body).Decode(createPostDto)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		validationErr := createPostDto.Validate()
+		if validationErr != nil {
+			http.Error(w, validationErr.Error(), http.StatusBadRequest)
+			return
+		}
+		err = postsService.UpdatePost(account, id, createPostDto)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	})
 
 	//delete post by id
 	router.DELETE("/api/posts/:id", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
