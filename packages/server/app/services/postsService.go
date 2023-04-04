@@ -65,6 +65,18 @@ func (postsService *postsService) AddMessageByPostId(account *models.Account, po
 	postsService.messageModel.Add(message)
 }
 
+func (postsService *postsService) UpdateMessageByPostId(account *models.Account, postId int, messageId int, addMessageDto *dtos.AddMessageDto) error {
+	if !postsService.postModel.Exists(postId) {
+		return errors.New("post not found")
+	}
+	if !(postsService.GetAccountByPostId(postId).Id == account.Id) {
+		return errors.New("access denied")
+	}
+	message := &models.Message{Text: addMessageDto.Text}
+	postsService.messageModel.Update(postId, messageId, message)
+	return nil
+}
+
 func (postsService *postsService) RemoveMessageByPostId(account *models.Account, postId int, messageId int) error {
 	if !postsService.postModel.Exists(postId) {
 		return errors.New("post not found")

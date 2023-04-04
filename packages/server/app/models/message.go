@@ -65,6 +65,14 @@ func (model *MessageModel) Add(message *Message) {
 	model.lastId++
 }
 
+func (model *MessageModel) Update(postId int, messageId int, updatedMessage *Message) {
+	for _, message := range model.messages {
+		if message.Id == messageId && message.Post.Id == postId {
+			model.messages[messageId-1].Text = updatedMessage.Text
+		}
+	}
+}
+
 func (model *MessageModel) Delete(id int) {
 	for i, message := range model.messages {
 		if message.Id == id {

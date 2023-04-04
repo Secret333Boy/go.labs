@@ -214,7 +214,43 @@ func GetPostsRouter() *httprouter.Router {
 		}
 	})
 
-	//TODO: add update for message by id
+	//update message by id
+	router.PATCH("/api/posts/:id/messages/:messageId", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		account, err := middlewares.UseAuth(w, r)
+		if err != nil {
+			return
+		}
+
+		id, err := strconv.Atoi(ps.ByName("id"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		messageId, err := strconv.Atoi(ps.ByName("messageId"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		addMessageDto := &dtos.AddMessageDto{}
+		err = json.NewDecoder(r.Body).Decode(addMessageDto)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		validationErr := addMessageDto.Validate()
+		if validationErr != nil {
+			http.Error(w, validationErr.Error(), http.StatusBadRequest)
+			return
+		}
+		err = postsService.UpdateMessageByPostId(account, id, messageId, addMessageDto)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	})
 
 	//delete message by id
 	router.DELETE("/api/posts/:id/messages/:messageId", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -229,7 +265,7 @@ func GetPostsRouter() *httprouter.Router {
 			return
 		}
 
-		messageId, err := strconv.Atoi(ps.ByName("id"))
+		messageId, err := strconv.Atoi(ps.ByName("messageId"))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
