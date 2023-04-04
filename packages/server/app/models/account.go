@@ -1,10 +1,10 @@
 package models
 
 type Account struct {
-	Id        int
-	FirstName string
-	LastName  string
-	model     *AccountModel
+	Id    int
+	Email string
+	Hash  string
+	model *AccountModel
 }
 
 type AccountModel struct {
@@ -32,6 +32,16 @@ func (model *AccountModel) FindOne(id int) *Account {
 	return nil
 }
 
+func (model *AccountModel) FindOneByEmail(email string) *Account {
+	for _, account := range model.accounts {
+		if account.Email == email {
+			return &account
+		}
+	}
+
+	return nil
+}
+
 func (model *AccountModel) Add(account *Account) {
 	account.model = model
 	account.Id = model.lastId + 1
@@ -52,6 +62,15 @@ func (model *AccountModel) Delete(id int) {
 func (model *AccountModel) Exists(id int) bool {
 	for _, account := range model.accounts {
 		if account.Id == id {
+			return true
+		}
+	}
+	return false
+}
+
+func (model *AccountModel) ExistsByEmail(email string) bool {
+	for _, account := range model.accounts {
+		if account.Email == email {
 			return true
 		}
 	}

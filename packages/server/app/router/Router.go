@@ -78,7 +78,6 @@ func (router *Router) Use(pattern string, router2 *Router) {
 }
 
 func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 	for _, route := range router.routes {
 		routerRegExpEnd := "/?$"
 		if route.pattern[len(route.pattern)-1] == '/' {
@@ -98,11 +97,12 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		/*Only for debugging!*/
 		// fmt.Println(w, "\nMethod: "+r.Method+"\nURL path: "+r.URL.Path+"\nRegexp: "+patternRegexp.String()+"\nRouter root: "+router.root)
 		if (r.Method == route.method || route.method == "*") && patternRegexp.MatchString(r.URL.Path) {
+			w.Header().Add("Content-Type", "application/json")
 			route.handler.ServeHTTP(w, r)
 			return
 		}
 	}
 
 	w.WriteHeader(http.StatusNotFound)
-	fmt.Fprintf(w, "Not found "+r.URL.Path)
+	fmt.Fprintf(w, "Not found "+r.Method+" "+r.URL.Path)
 }

@@ -4,14 +4,22 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"go.labs/server/app/controllers"
 )
 
+const DefaultPort = "8081"
+
 func Run() {
+	port, portExists := os.LookupEnv("PORT")
 
-	var router = controllers.GetIndexRouter()
+	if !portExists {
+		port = DefaultPort
+	}
 
-	fmt.Println("Server started on port " + "8081")
-	log.Fatal(http.ListenAndServe(":8081", router))
+	router := controllers.GetIndexRouter()
+
+	fmt.Println("Server started on port " + port)
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
