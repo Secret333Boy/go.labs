@@ -10,8 +10,8 @@ type postsService struct {
 	model *models.PostModel
 }
 
-func (postService *postsService) GetAllPosts() []models.Post {
-	return postService.model.FindAll()
+func (postService *postsService) GetAllPosts(limit int, offset int) []models.Post {
+	return postService.model.FindAll(limit, offset)
 }
 
 func (postService *postsService) GetOnePost(id int) *models.Post {

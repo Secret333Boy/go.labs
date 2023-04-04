@@ -19,7 +19,7 @@ func GetAPIRouter() *router.Router {
 
 	router.Use("/accounts", accounts.GetAccountsRouter())
 	router.Use("/auth", auth.GetAuthRouter())
-	router.Use("/posts", posts.GetPostsRouter())
+	router.Handle("/posts*", posts.GetPostsRouter())
 
 	return router
 }

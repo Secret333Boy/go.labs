@@ -25,8 +25,22 @@ func NewPostModel() *PostModel {
 	return model
 }
 
-func (model *PostModel) FindAll() []Post {
-	return model.posts
+func (model *PostModel) FindAll(limit int, offset int) []Post {
+
+	if len(model.posts) > 0 {
+		if offset > len(model.posts) {
+			offset = len(model.posts)
+		}
+
+		end := offset + limit
+		if end > len(model.posts) {
+			end = len(model.posts)
+		}
+		return model.posts[offset:end]
+	} else {
+		return model.posts
+	}
+
 }
 
 func (model *PostModel) FindOne(id int) *Post {

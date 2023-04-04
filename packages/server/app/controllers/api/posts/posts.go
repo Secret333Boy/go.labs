@@ -4,29 +4,42 @@ import (
 	"encoding/json"
 	"go.labs/server/app/controllers/api/posts/dtos"
 	"go.labs/server/app/middlewares"
-	"go.labs/server/app/router"
 	"go.labs/server/app/services"
 	"net/http"
+	"strconv"
+
+	"github.com/julienschmidt/httprouter"
 )
 
-func GetPostsRouter() *router.Router {
-	router := router.NewRouter()
+func GetPostsRouter() *httprouter.Router {
+	router := httprouter.New()
 	postsService := services.PostsService
-
-	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	//get all posts
+	router.GET("/api/posts", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		_, err := middlewares.UseAuth(w, r)
 		if err != nil {
 			return
 		}
 
-		err = json.NewEncoder(w).Encode(postsService.GetAllPosts())
+		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		err = json.NewEncoder(w).Encode(postsService.GetAllPosts(limit, offset))
 		if err != nil {
 			http.Error(w, "Failed encoding json", http.StatusInternalServerError)
 		}
 
 	})
 
-	router.Post("/", func(w http.ResponseWriter, r *http.Request) {
+	//create new post
+	router.POST("/api/posts", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		account, err := middlewares.UseAuth(w, r)
 		if err != nil {
 			return
@@ -44,9 +57,27 @@ func GetPostsRouter() *router.Router {
 			http.Error(w, validationErr.Error(), http.StatusBadRequest)
 			return
 		}
-
 		postsService.AddPost(account, createPostDto)
 
+	})
+
+	//get post by id
+	router.GET("/api/posts/:id", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		_, err := middlewares.UseAuth(w, r)
+		if err != nil {
+			return
+		}
+
+		id, err := strconv.Atoi(ps.ByName("id"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err = json.NewEncoder(w).Encode(postsService.GetOnePost(id))
+		if err != nil {
+			http.Error(w, "Failed encoding json", http.StatusInternalServerError)
+		}
 	})
 
 	return router
