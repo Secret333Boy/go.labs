@@ -80,8 +80,34 @@ func GetPostsRouter() *httprouter.Router {
 			http.Error(w, "Failed encoding json", http.StatusInternalServerError)
 		}
 	})
-
-	//TODO: add update for post by id
+	//
+	////update post by id
+	//router.PATCH("/api/posts/:id", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	//	account, err := middlewares.UseAuth(w, r)
+	//	if err != nil {
+	//		return
+	//	}
+	//
+	//	id, err := strconv.Atoi(ps.ByName("id"))
+	//	if err != nil {
+	//		http.Error(w, err.Error(), http.StatusBadRequest)
+	//		return
+	//	}
+	//
+	//	createPostDto := &dtos.CreatePostDto{}
+	//	err = json.NewDecoder(r.Body).Decode(createPostDto)
+	//	if err != nil {
+	//		http.Error(w, err.Error(), http.StatusBadRequest)
+	//		return
+	//	}
+	//
+	//	validationErr := createPostDto.Validate()
+	//	if validationErr != nil {
+	//		http.Error(w, validationErr.Error(), http.StatusBadRequest)
+	//		return
+	//	}
+	//	postsService.AddPost(account, createPostDto)
+	//}
 
 	//delete post by id
 	router.DELETE("/api/posts/:id", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -103,9 +129,15 @@ func GetPostsRouter() *httprouter.Router {
 	})
 
 	//get all messages
-	router.GET("/api/posts/:id/messages", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.GET("/api/posts/:id/messages", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		_, err := middlewares.UseAuth(w, r)
 		if err != nil {
+			return
+		}
+
+		id, err := strconv.Atoi(ps.ByName("id"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -119,7 +151,7 @@ func GetPostsRouter() *httprouter.Router {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		err = json.NewEncoder(w).Encode(postsService.GetAllMessages(limit, offset))
+		err = json.NewEncoder(w).Encode(postsService.GetAllMessagesByPostId(id, limit, offset))
 		if err != nil {
 			http.Error(w, "Failed encoding json", http.StatusInternalServerError)
 		}
@@ -127,9 +159,15 @@ func GetPostsRouter() *httprouter.Router {
 	})
 
 	//create new message
-	router.POST("/api/posts/:id/messages", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.POST("/api/posts/:id/messages", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		account, err := middlewares.UseAuth(w, r)
 		if err != nil {
+			return
+		}
+
+		id, err := strconv.Atoi(ps.ByName("id"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -145,12 +183,12 @@ func GetPostsRouter() *httprouter.Router {
 			http.Error(w, validationErr.Error(), http.StatusBadRequest)
 			return
 		}
-		postsService.AddMessage(account, addMessageDto)
+		postsService.AddMessageByPostId(account, id, addMessageDto)
 
 	})
 
 	//get message by id
-	router.GET("/api/posts/:id/messages/:id", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	router.GET("/api/posts/:id/messages/:messageId", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		_, err := middlewares.UseAuth(w, r)
 		if err != nil {
 			return
@@ -162,17 +200,23 @@ func GetPostsRouter() *httprouter.Router {
 			return
 		}
 
-		err = json.NewEncoder(w).Encode(postsService.GetOneMessage(id))
+		messageId, err := strconv.Atoi(ps.ByName("messageId"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err = json.NewEncoder(w).Encode(postsService.GetOneMessageByPostId(id, messageId))
 		if err != nil {
 			http.Error(w, "Failed encoding json", http.StatusInternalServerError)
 		}
 	})
 
-	//TODO: add update for post by id
+	//TODO: add update for message by id
 
 	//delete message by id
 	router.DELETE("/api/posts/:id/messages/:messageId", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		_, err := middlewares.UseAuth(w, r)
+		account, err := middlewares.UseAuth(w, r)
 		if err != nil {
 			return
 		}
@@ -183,7 +227,13 @@ func GetPostsRouter() *httprouter.Router {
 			return
 		}
 
-		err = postsService.RemoveMessageByPostId(id)
+		messageId, err := strconv.Atoi(ps.ByName("id"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err = postsService.RemoveMessageByPostId(account, id, messageId)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
