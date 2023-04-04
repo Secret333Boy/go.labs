@@ -52,17 +52,27 @@ func (postsService *postsService) RemovePost(account *models.Account, id int) er
 	return nil
 }
 
-func (postsService *postsService) GetAllMessagesByPostId(postId int, limit int, offset int) []models.Message {
-	return postsService.messageModel.FindAll(postId, limit, offset)
+func (postsService *postsService) GetAllMessagesByPostId(postId int, limit int, offset int) ([]models.Message, error) {
+	if !postsService.postModel.Exists(postId) {
+		return nil, errors.New("post not found")
+	}
+	return postsService.messageModel.FindAll(postId, limit, offset), nil
 }
 
-func (postsService *postsService) GetOneMessageByPostId(postId int, messageId int) *models.Message {
-	return postsService.messageModel.FindOne(postId, messageId)
+func (postsService *postsService) GetOneMessageByPostId(postId int, messageId int) (*models.Message, error) {
+	if !postsService.postModel.Exists(postId) {
+		return nil, errors.New("post not found")
+	}
+	return postsService.messageModel.FindOne(postId, messageId), nil
 }
 
-func (postsService *postsService) AddMessageByPostId(account *models.Account, postId int, addMessageDto *dtos.AddMessageDto) {
+func (postsService *postsService) AddMessageByPostId(account *models.Account, postId int, addMessageDto *dtos.AddMessageDto) error {
+	if !postsService.postModel.Exists(postId) {
+		return errors.New("post not found")
+	}
 	message := &models.Message{Account: account, Post: postsService.GetOnePost(postId), Text: addMessageDto.Text, PublishedAt: time.Now()}
 	postsService.messageModel.Add(message)
+	return nil
 }
 
 func (postsService *postsService) UpdateMessageByPostId(account *models.Account, postId int, messageId int, addMessageDto *dtos.AddMessageDto) error {

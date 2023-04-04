@@ -151,7 +151,12 @@ func GetPostsRouter() *httprouter.Router {
 		if err != nil {
 			offset = 0
 		}
-		err = json.NewEncoder(w).Encode(postsService.GetAllMessagesByPostId(id, limit, offset))
+
+		resultMessages, err := postsService.GetAllMessagesByPostId(id, limit, offset)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+		err = json.NewEncoder(w).Encode(resultMessages)
 		if err != nil {
 			http.Error(w, "Failed encoding json", http.StatusInternalServerError)
 		}
@@ -183,8 +188,11 @@ func GetPostsRouter() *httprouter.Router {
 			http.Error(w, validationErr.Error(), http.StatusBadRequest)
 			return
 		}
-		postsService.AddMessageByPostId(account, id, addMessageDto)
 
+		err = postsService.AddMessageByPostId(account, id, addMessageDto)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
 	})
 
 	//get message by id
@@ -205,8 +213,11 @@ func GetPostsRouter() *httprouter.Router {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
-		err = json.NewEncoder(w).Encode(postsService.GetOneMessageByPostId(id, messageId))
+		resultMessages, err := postsService.GetOneMessageByPostId(id, messageId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+		err = json.NewEncoder(w).Encode(resultMessages)
 		if err != nil {
 			http.Error(w, "Failed encoding json", http.StatusInternalServerError)
 		}
