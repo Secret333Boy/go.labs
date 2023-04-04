@@ -56,7 +56,6 @@ func (model *PostModel) FindOne(id int) *Post {
 func (model *PostModel) FindAccountByPostId(id int) *Account {
 	for _, post := range model.posts {
 		if post.Id == id {
-			println(post.Account)
 			return post.Account
 		}
 	}
