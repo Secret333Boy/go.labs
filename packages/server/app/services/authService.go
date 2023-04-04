@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"go.labs/server/app/controllers/api/auth/dtos"
 	"go.labs/server/app/models"
 	"golang.org/x/crypto/bcrypt"
