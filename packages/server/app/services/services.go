@@ -6,3 +6,4 @@ import (
 
 var AccountsService = &accountsService{models.NewAccountModel()}
 var AuthService = &authService{models.NewTokenModel(), AccountsService}
+var PostsService = &postsService{models.NewPostModel()}

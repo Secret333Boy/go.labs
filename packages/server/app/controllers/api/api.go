@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"go.labs/server/app/controllers/api/posts"
 	"net/http"
 
 	"go.labs/server/app/controllers/api/accounts"
@@ -18,6 +19,7 @@ func GetAPIRouter() *router.Router {
 
 	router.Use("/accounts", accounts.GetAccountsRouter())
 	router.Use("/auth", auth.GetAuthRouter())
+	router.Use("/posts", posts.GetPostsRouter())
 
 	return router
 }
