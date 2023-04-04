@@ -24,24 +24,30 @@ func NewMessageModel() *MessageModel {
 	return model
 }
 
-//func (model *MessageModel) FindAll(postId int, limit int, offset int) []Message {
-//
-//	messagesByPostId = model.messages
-//
-//	if len(model.messages) > 0 {
-//		if offset > len(model.messages) {
-//			offset = len(model.messages)
-//		}
-//
-//		end := offset + limit
-//		if end > len(model.messages) {
-//			end = len(model.messages)
-//		}
-//		return model.messages[offset:end]
-//	} else {
-//		return model.messages
-//	}
-//}
+func (model *MessageModel) FindAll(postId int, limit int, offset int) []Message {
+
+	var messagesByPostId = make([]Message, 0, len(model.messages))
+
+	for _, message := range model.messages {
+		if message.Post.Id == postId {
+			messagesByPostId = append(messagesByPostId, message)
+		}
+	}
+
+	if len(messagesByPostId) > 0 {
+		if offset > len(messagesByPostId) {
+			offset = len(messagesByPostId)
+		}
+
+		end := offset + limit
+		if end > len(messagesByPostId) {
+			end = len(messagesByPostId)
+		}
+		return messagesByPostId[offset:end]
+	} else {
+		return messagesByPostId
+	}
+}
 
 func (model *MessageModel) FindOne(postId, id int) *Message {
 	for _, message := range model.messages {
