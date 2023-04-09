@@ -3,9 +3,9 @@ package services
 import (
 	"errors"
 	"fmt"
+	"go.labs/server/app/controllers/api/auth"
 
 	"github.com/golang-jwt/jwt/v5"
-	"go.labs/server/app/controllers/api/auth/dtos"
 	"go.labs/server/app/models"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -15,7 +15,7 @@ type authService struct {
 	accountsService *accountsService
 }
 
-func (authService *authService) Register(registerDto *dtos.RegisterDto) (*Tokens, error) {
+func (authService *authService) Register(registerDto *auth.RegisterDto) (*Tokens, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(registerDto.Password), 14)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (authService *authService) Register(registerDto *dtos.RegisterDto) (*Tokens
 	return &Tokens{accessToken, refreshToken}, nil
 }
 
-func (authService *authService) Login(loginDto *dtos.RegisterDto) (*Tokens, error) {
+func (authService *authService) Login(loginDto *auth.RegisterDto) (*Tokens, error) {
 	account := authService.accountsService.GetOneByEmail(loginDto.Email)
 	if account == nil {
 		return nil, errors.New("account not found")
