@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"go.labs/server/app/controllers/api/auth/dtos"
 	"go.labs/server/app/router"
 	"go.labs/server/app/services"
 )
@@ -14,7 +15,7 @@ func GetAuthRouter() *router.Router {
 	authService := services.AuthService
 
 	router.Post("/register", func(w http.ResponseWriter, r *http.Request) {
-		registerDto := &RegisterDto{}
+		registerDto := &dtos.RegisterDto{}
 
 		err := json.NewDecoder(r.Body).Decode(registerDto)
 		if err != nil {
@@ -44,7 +45,7 @@ func GetAuthRouter() *router.Router {
 	})
 
 	router.Post("/login", func(w http.ResponseWriter, r *http.Request) {
-		loginDto := &RegisterDto{}
+		loginDto := &dtos.RegisterDto{}
 
 		err := json.NewDecoder(r.Body).Decode(loginDto)
 		if err != nil {

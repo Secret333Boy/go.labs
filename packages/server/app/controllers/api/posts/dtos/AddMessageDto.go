@@ -1,4 +1,4 @@
-package posts
+package dtos
 
 import "errors"
 

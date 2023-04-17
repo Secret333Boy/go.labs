@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"go.labs/server/app/controllers/api/posts/dtos"
 	"go.labs/server/app/middlewares"
 	"go.labs/server/app/services"
 
@@ -44,7 +45,7 @@ func GetPostsRouter() *httprouter.Router {
 			return
 		}
 
-		createPostDto := &CreatePostDto{}
+		createPostDto := &dtos.CreatePostDto{}
 		err = json.NewDecoder(r.Body).Decode(createPostDto)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -92,7 +93,7 @@ func GetPostsRouter() *httprouter.Router {
 			return
 		}
 
-		createPostDto := &CreatePostDto{}
+		createPostDto := &dtos.CreatePostDto{}
 		err = json.NewDecoder(r.Body).Decode(createPostDto)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -176,7 +177,7 @@ func GetPostsRouter() *httprouter.Router {
 			return
 		}
 
-		addMessageDto := &AddMessageDto{}
+		addMessageDto := &dtos.AddMessageDto{}
 		err = json.NewDecoder(r.Body).Decode(addMessageDto)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -242,7 +243,7 @@ func GetPostsRouter() *httprouter.Router {
 			return
 		}
 
-		addMessageDto := &AddMessageDto{}
+		addMessageDto := &dtos.AddMessageDto{}
 		err = json.NewDecoder(r.Body).Decode(addMessageDto)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
