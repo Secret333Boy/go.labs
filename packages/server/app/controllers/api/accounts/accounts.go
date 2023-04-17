@@ -4,14 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/julienschmidt/httprouter"
 	"go.labs/server/app/middlewares"
-	"go.labs/server/app/router"
 )
 
-func GetAccountsRouter() *router.Router {
-	router := router.NewRouter()
-
-	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+func HandleAccounts(router *httprouter.Router) {
+	router.GET("/api/accounts", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		account, err := middlewares.UseAuth(w, r)
 		if err != nil {
 			return
@@ -22,5 +20,4 @@ func GetAccountsRouter() *router.Router {
 			http.Error(w, "Failed reading json file", http.StatusInternalServerError)
 		}
 	})
-	return router
 }

@@ -1,11 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"net/http"
+	"os"
 
 	"github.com/joho/godotenv"
-	"go.labs/server/app"
+	"go.labs/server/app/controllers"
 )
+
+const DefaultPort = "8081"
 
 func main() {
 	err := godotenv.Load()
@@ -13,5 +18,14 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	app.Run()
+	port, portExists := os.LookupEnv("PORT")
+
+	if !portExists {
+		port = DefaultPort
+	}
+
+	router := controllers.GetIndexRouter()
+
+	fmt.Println("Server started on port " + port)
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }

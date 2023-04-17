@@ -5,17 +5,17 @@ import (
 	"net/http"
 	"strings"
 
-	"go.labs/server/app/controllers/api/auth/dtos"
-	"go.labs/server/app/router"
-	"go.labs/server/app/services"
+	"github.com/julienschmidt/httprouter"
+	"go.labs/server/app/middlewares"
+	"go.labs/server/app/services/auth"
+	tokensService "go.labs/server/app/services/tokens"
 )
 
-func GetAuthRouter() *router.Router {
-	router := router.NewRouter()
-	authService := services.AuthService
+func HandleAuth(router *httprouter.Router) {
+	authService := auth.GetAuthServiceInstance()
 
-	router.Post("/register", func(w http.ResponseWriter, r *http.Request) {
-		registerDto := &dtos.RegisterDto{}
+	router.POST("/api/auth/register", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		registerDto := &RegisterDto{}
 
 		err := json.NewDecoder(r.Body).Decode(registerDto)
 		if err != nil {
@@ -29,14 +29,14 @@ func GetAuthRouter() *router.Router {
 			return
 		}
 
-		tokens, err := authService.Register(registerDto)
+		tokens, err := authService.Register(registerDto.Email, registerDto.Password)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		w.Header().Add("Content-Type", "application/json")
-		http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: services.RefreshTokenExpirationSeconds})
+		middlewares.UseJSONContentType(w)
+		http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds})
 		err = json.NewEncoder(w).Encode(tokens.AccessToken)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -44,8 +44,8 @@ func GetAuthRouter() *router.Router {
 		}
 	})
 
-	router.Post("/login", func(w http.ResponseWriter, r *http.Request) {
-		loginDto := &dtos.RegisterDto{}
+	router.POST("/api/auth/login", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		loginDto := &RegisterDto{}
 
 		err := json.NewDecoder(r.Body).Decode(loginDto)
 		if err != nil {
@@ -59,14 +59,14 @@ func GetAuthRouter() *router.Router {
 			return
 		}
 
-		tokens, err := authService.Login(loginDto)
+		tokens, err := authService.Login(loginDto.Email, loginDto.Password)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		w.Header().Add("Content-Type", "application/json")
-		http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: services.RefreshTokenExpirationSeconds})
+		middlewares.UseJSONContentType(w)
+		http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds})
 		err = json.NewEncoder(w).Encode(tokens.AccessToken)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -74,7 +74,7 @@ func GetAuthRouter() *router.Router {
 		}
 	})
 
-	router.Get("/validate", func(w http.ResponseWriter, r *http.Request) {
+	router.GET("/api/auth/validate", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		header := r.Header.Get("Authorization")
 
 		token := strings.Replace(header, "Bearer ", "", 1)
@@ -85,7 +85,7 @@ func GetAuthRouter() *router.Router {
 		}
 	})
 
-	router.Get("/refresh", func(w http.ResponseWriter, r *http.Request) {
+	router.GET("/api/auth/refresh", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		cookie, err := r.Cookie("refreshToken")
 
 		if err != nil {
@@ -101,8 +101,8 @@ func GetAuthRouter() *router.Router {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 		}
 
-		w.Header().Add("Content-Type", "application/json")
-		http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: services.RefreshTokenExpirationSeconds})
+		middlewares.UseJSONContentType(w)
+		http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds})
 		err = json.NewEncoder(w).Encode(tokens.AccessToken)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -110,9 +110,8 @@ func GetAuthRouter() *router.Router {
 		}
 	})
 
-	router.Get("/logout", func(w http.ResponseWriter, r *http.Request) {
+	router.GET("/api/auth/logout", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: "", HttpOnly: true, Path: "/api", MaxAge: -1})
 	})
 
-	return router
 }
