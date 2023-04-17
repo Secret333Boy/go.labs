@@ -4,23 +4,18 @@ import (
 	"fmt"
 	"net/http"
 
-	"go.labs/server/app/controllers/api/posts"
-
+	"github.com/julienschmidt/httprouter"
 	"go.labs/server/app/controllers/api/accounts"
 	"go.labs/server/app/controllers/api/auth"
-	"go.labs/server/app/router"
+	"go.labs/server/app/controllers/api/posts"
 )
 
-func GetAPIRouter() *router.Router {
-	router := router.NewRouter()
-
-	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+func HandleAPI(router *httprouter.Router) {
+	router.GET("/api", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		fmt.Fprintf(w, "go.labs v1.0")
 	})
 
-	router.Use("/accounts", accounts.GetAccountsRouter())
-	router.Use("/auth", auth.GetAuthRouter())
-	router.Handle("/posts*", posts.GetPostsRouter())
-
-	return router
+	accounts.HandleAccounts(router)
+	auth.HandleAuth(router)
+	posts.HandlePosts(router)
 }

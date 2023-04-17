@@ -1,14 +1,14 @@
 package controllers
 
 import (
+	"github.com/julienschmidt/httprouter"
 	"go.labs/server/app/controllers/api"
-	"go.labs/server/app/router"
 )
 
-func GetIndexRouter() *router.Router {
-	router := router.NewRouter()
+func GetIndexRouter() *httprouter.Router {
+	router := httprouter.New()
 
-	router.Use("/api", api.GetAPIRouter())
+	api.HandleAPI(router)
 
 	return router
 }

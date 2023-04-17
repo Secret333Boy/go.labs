@@ -1,4 +1,4 @@
-package dtos
+package posts
 
 import "errors"
 
@@ -6,7 +6,7 @@ type AddMessageDto struct {
 	Text string
 }
 
-const NoTextErrorMessage = "Add message text"
+const NoTextErrorMessage = "add message text"
 
 func (addMessageDto *AddMessageDto) Validate() error {
 	if addMessageDto.Text == "" {
