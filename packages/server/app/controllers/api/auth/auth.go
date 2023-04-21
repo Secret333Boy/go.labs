@@ -11,107 +11,122 @@ import (
 	tokensService "go.labs/server/app/services/tokens"
 )
 
-func HandleAuth(router *httprouter.Router) {
-	authService := auth.GetAuthServiceInstance()
+type AuthHandler struct {
+	service *auth.AuthService
+}
 
-	router.POST("/api/auth/register", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		registerDto := &RegisterDto{}
+func NewAuthHandler(service *auth.AuthService) *AuthHandler {
+	return &AuthHandler{service: service}
+}
 
-		err := json.NewDecoder(r.Body).Decode(registerDto)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+func (h *AuthHandler) RegisterHandler(router *httprouter.Router) {
+	router.POST("/api/auth/register", h.register)
 
-		validationErr := registerDto.Validate()
-		if validationErr != nil {
-			http.Error(w, validationErr.Error(), http.StatusBadRequest)
-			return
-		}
+	router.POST("/api/auth/login", h.login)
 
-		tokens, err := authService.Register(registerDto.Email, registerDto.Password)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+	router.GET("/api/auth/validate", h.validate)
 
-		middlewares.UseJSONContentType(w)
-		http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds})
-		err = json.NewEncoder(w).Encode(tokens.AccessToken)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	})
+	router.GET("/api/auth/refresh", h.refresh)
 
-	router.POST("/api/auth/login", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		loginDto := &RegisterDto{}
+	router.GET("/api/auth/logout", h.logout)
+}
 
-		err := json.NewDecoder(r.Body).Decode(loginDto)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+func (h *AuthHandler) register(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	registerDto := &RegisterDto{}
 
-		validationErr := loginDto.Validate()
-		if validationErr != nil {
-			http.Error(w, validationErr.Error(), http.StatusBadRequest)
-			return
-		}
+	err := json.NewDecoder(r.Body).Decode(registerDto)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-		tokens, err := authService.Login(loginDto.Email, loginDto.Password)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+	validationErr := registerDto.Validate()
+	if validationErr != nil {
+		http.Error(w, validationErr.Error(), http.StatusBadRequest)
+		return
+	}
 
-		middlewares.UseJSONContentType(w)
-		http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds})
-		err = json.NewEncoder(w).Encode(tokens.AccessToken)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	})
+	tokens, err := h.service.Register(registerDto.Email, registerDto.Password)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	router.GET("/api/auth/validate", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		header := r.Header.Get("Authorization")
+	middlewares.UseJSONContentType(w)
+	http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds})
+	err = json.NewEncoder(w).Encode(tokens.AccessToken)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
 
-		token := strings.Replace(header, "Bearer ", "", 1)
-		_, err := authService.Validate(token)
+func (h *AuthHandler) login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	loginDto := &RegisterDto{}
 
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-		}
-	})
+	err := json.NewDecoder(r.Body).Decode(loginDto)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	router.GET("/api/auth/refresh", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		cookie, err := r.Cookie("refreshToken")
+	validationErr := loginDto.Validate()
+	if validationErr != nil {
+		http.Error(w, validationErr.Error(), http.StatusBadRequest)
+		return
+	}
 
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
+	tokens, err := h.service.Login(loginDto.Email, loginDto.Password)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-		tokenString := cookie.Value
+	middlewares.UseJSONContentType(w)
+	http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds})
+	err = json.NewEncoder(w).Encode(tokens.AccessToken)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
 
-		tokens, err := authService.Refresh(tokenString)
+func (h *AuthHandler) validate(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	header := r.Header.Get("Authorization")
 
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-		}
+	token := strings.Replace(header, "Bearer ", "", 1)
+	_, err := h.service.Validate(token)
 
-		middlewares.UseJSONContentType(w)
-		http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds})
-		err = json.NewEncoder(w).Encode(tokens.AccessToken)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+	}
+}
 
-	router.GET("/api/auth/logout", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: "", HttpOnly: true, Path: "/api", MaxAge: -1})
-	})
+func (h *AuthHandler) refresh(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	cookie, err := r.Cookie("refreshToken")
 
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	tokenString := cookie.Value
+
+	tokens, err := h.service.Refresh(tokenString)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+	}
+
+	middlewares.UseJSONContentType(w)
+	http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds})
+	err = json.NewEncoder(w).Encode(tokens.AccessToken)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *AuthHandler) logout(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: "", HttpOnly: true, Path: "/api", MaxAge: -1})
 }

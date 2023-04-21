@@ -10,6 +10,10 @@ type AccountsService struct {
 	model *models.AccountModel
 }
 
+func NewAccountsService() *AccountsService {
+	return &AccountsService{models.NewAccountModel()}
+}
+
 func (a *AccountsService) GetAllAccounts() []models.Account {
 	return a.model.FindAll()
 }
@@ -33,10 +37,4 @@ func (a *AccountsService) AddAccount(account *models.Account) error {
 
 func (a *AccountsService) RemoveAccount(id int) {
 	a.model.Delete(id)
-}
-
-var accountsServiceInstance = &AccountsService{models.NewAccountModel()}
-
-func GetAccountsServiceInstance() *AccountsService {
-	return accountsServiceInstance
 }

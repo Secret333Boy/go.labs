@@ -8,11 +8,19 @@ import (
 	"go.labs/server/app/services/auth"
 )
 
-func UseAuth(w http.ResponseWriter, r *http.Request) (*models.Account, error) {
+type UseAuthMiddleware struct {
+	authService *auth.AuthService
+}
+
+func NewUseAuthMiddleware(authService *auth.AuthService) *UseAuthMiddleware {
+	return &UseAuthMiddleware{authService: authService}
+}
+
+func (m *UseAuthMiddleware) UseAuth(w http.ResponseWriter, r *http.Request) (*models.Account, error) {
 	header := r.Header.Get("Authorization")
 
 	token := strings.Replace(header, "Bearer ", "", 1)
-	account, err := auth.GetAuthServiceInstance().Validate(token)
+	account, err := m.authService.Validate(token)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return nil, err
