@@ -16,6 +16,10 @@ type AuthService struct {
 	accountsService *accounts.AccountsService
 }
 
+func NewAuthService(accountService *accounts.AccountsService) *AuthService {
+	return &AuthService{models.NewTokenModel(), accountService}
+}
+
 func (a *AuthService) Register(email string, password string) (*tokens.Tokens, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	if err != nil {
@@ -138,10 +142,4 @@ func (a *AuthService) Refresh(tokenString string) (*tokens.Tokens, error) {
 	a.tokenModel.UpdateByAccount(account, refreshToken)
 
 	return &tokens.Tokens{AccessToken: accessToken, RefreshToken: refreshToken}, nil
-}
-
-var authServiceInstance = &AuthService{models.NewTokenModel(), accounts.GetAccountsServiceInstance()}
-
-func GetAuthServiceInstance() *AuthService {
-	return authServiceInstance
 }

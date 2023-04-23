@@ -6,11 +6,21 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"go.labs/server/app/middlewares"
+	"go.labs/server/app/services/accounts"
 )
 
-func HandleAccounts(router *httprouter.Router) {
+type AccountsHandler struct {
+	service           *accounts.AccountsService
+	useAuthMiddleware *middlewares.UseAuthMiddleware
+}
+
+func NewAccountsHandler(service *accounts.AccountsService, useAuthMiddleware *middlewares.UseAuthMiddleware) *AccountsHandler {
+	return &AccountsHandler{service: service, useAuthMiddleware: useAuthMiddleware}
+}
+
+func (h *AccountsHandler) RegisterHandler(router *httprouter.Router) {
 	router.GET("/api/accounts", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		account, err := middlewares.UseAuth(w, r)
+		account, err := h.useAuthMiddleware.UseAuth(w, r)
 		if err != nil {
 			return
 		}

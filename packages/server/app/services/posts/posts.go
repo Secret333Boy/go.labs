@@ -12,6 +12,10 @@ type PostsService struct {
 	messageModel *models.MessageModel
 }
 
+func NewPostsService() *PostsService {
+	return &PostsService{models.NewPostModel(), models.NewMessageModel()}
+}
+
 func (p *PostsService) GetAllPosts(limit int, offset int) []models.Post {
 	return p.postModel.FindAll(limit, offset)
 }
@@ -99,10 +103,4 @@ func (p *PostsService) RemoveMessageByPostId(account *models.Account, postId int
 	}
 	p.messageModel.Delete(messageId)
 	return nil
-}
-
-var postsServiceInstance = &PostsService{models.NewPostModel(), models.NewMessageModel()}
-
-func GetPostsServiceInstance() *PostsService {
-	return postsServiceInstance
 }
