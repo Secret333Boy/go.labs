@@ -17,12 +17,14 @@ func Init() *gorm.DB {
 	}
 
 	db, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
-
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	db.AutoMigrate(&models.Account{}, &models.Token{})
+	err = db.AutoMigrate(&models.Account{}, &models.Token{})
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	return db
 }
