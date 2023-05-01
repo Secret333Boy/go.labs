@@ -37,7 +37,7 @@ func (p *PostsService) UpdatePost(account *models.Account, id int, title string,
 	if !p.postModel.Exists(id) {
 		return errors.New("post not found")
 	}
-	if !(p.GetAccountByPostId(id).Id == account.Id) {
+	if !(p.GetAccountByPostId(id).ID == account.ID) {
 		return errors.New("access denied")
 	}
 	post := &models.Post{Title: title, Description: description}
@@ -49,7 +49,7 @@ func (p *PostsService) RemovePost(account *models.Account, id int) error {
 	if !p.postModel.Exists(id) {
 		return errors.New("post not found")
 	}
-	if !(p.GetAccountByPostId(id).Id == account.Id) {
+	if !(p.GetAccountByPostId(id).ID == account.ID) {
 		return errors.New("access denied")
 	}
 	p.postModel.Delete(id)
@@ -83,7 +83,7 @@ func (p *PostsService) UpdateMessageByPostId(account *models.Account, postId int
 	if !p.postModel.Exists(postId) {
 		return errors.New("post not found")
 	}
-	if !(p.GetAccountByPostId(postId).Id == account.Id) {
+	if !(p.GetAccountByPostId(postId).ID == account.ID) {
 		return errors.New("access denied")
 	}
 	message := &models.Message{Text: text}
@@ -95,7 +95,7 @@ func (p *PostsService) RemoveMessageByPostId(account *models.Account, postId int
 	if !p.postModel.Exists(postId) {
 		return errors.New("post not found")
 	}
-	if !(p.GetAccountByPostId(postId).Id == account.Id) {
+	if !(p.GetAccountByPostId(postId).ID == account.ID) {
 		return errors.New("access denied")
 	}
 	if !p.messageModel.Exists(messageId) {

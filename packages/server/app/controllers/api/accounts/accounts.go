@@ -25,6 +25,7 @@ func (h *AccountsHandler) RegisterHandler(router *httprouter.Router) {
 			return
 		}
 
+		middlewares.UseJSONContentType(w)
 		err = json.NewEncoder(w).Encode(account)
 		if err != nil {
 			http.Error(w, "Failed reading json file", http.StatusInternalServerError)
