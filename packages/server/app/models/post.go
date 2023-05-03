@@ -11,5 +11,5 @@ type Post struct {
 	Title       string
 	Description string
 	PublishedAt time.Time
-	Messages    []Message `gorm:"foreignKey:AccountID;constraint:OnDelete:CASCADE"`
+	Messages    []Message `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE"`
 }

@@ -10,11 +10,11 @@ import (
 )
 
 type AccountsHandler struct {
-	service           *accounts.AccountsService
+	service           accounts.Account
 	useAuthMiddleware *middlewares.UseAuthMiddleware
 }
 
-func NewAccountsHandler(service *accounts.AccountsService, useAuthMiddleware *middlewares.UseAuthMiddleware) *AccountsHandler {
+func NewAccountsHandler(service accounts.Account, useAuthMiddleware *middlewares.UseAuthMiddleware) *AccountsHandler {
 	return &AccountsHandler{service: service, useAuthMiddleware: useAuthMiddleware}
 }
 

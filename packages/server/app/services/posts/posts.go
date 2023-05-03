@@ -12,11 +12,11 @@ type postsService struct {
 	DB *gorm.DB
 }
 
-func NewPostsService(db *gorm.DB) PostsAndMessages {
+func NewPostsService(db *gorm.DB) Posts {
 	return &postsService{DB: db}
 }
 
-type PostsAndMessages interface {
+type Posts interface {
 	GetAllPosts(limit int, offset int) []models.Post
 	GetOnePost(id int) *models.Post
 	AddPost(account *models.Account, title string, description string) error

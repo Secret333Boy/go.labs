@@ -24,8 +24,9 @@ func GetIndexRouter() *httprouter.Router {
 		fmt.Fprintf(w, "go.labs v1.0")
 	})
 
-	accountsService := &accountsService.AccountsService{DB: db}
-	authService := &authService.AuthService{DB: db, AccountsService: accountsService}
+	accountsService := accountsService.NewAccountsService(db)
+
+	authService := authService.NewAuthService(db, accountsService)
 
 	postsService := postsService.NewPostsService(db)
 
