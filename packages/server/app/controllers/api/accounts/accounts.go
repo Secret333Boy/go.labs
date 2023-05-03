@@ -10,11 +10,11 @@ import (
 )
 
 type AccountsHandler struct {
-	service           *accounts.AccountsService
+	service           accounts.Account
 	useAuthMiddleware *middlewares.UseAuthMiddleware
 }
 
-func NewAccountsHandler(service *accounts.AccountsService, useAuthMiddleware *middlewares.UseAuthMiddleware) *AccountsHandler {
+func NewAccountsHandler(service accounts.Account, useAuthMiddleware *middlewares.UseAuthMiddleware) *AccountsHandler {
 	return &AccountsHandler{service: service, useAuthMiddleware: useAuthMiddleware}
 }
 
@@ -25,6 +25,7 @@ func (h *AccountsHandler) RegisterHandler(router *httprouter.Router) {
 			return
 		}
 
+		middlewares.UseJSONContentType(w)
 		err = json.NewEncoder(w).Encode(account)
 		if err != nil {
 			http.Error(w, "Failed reading json file", http.StatusInternalServerError)

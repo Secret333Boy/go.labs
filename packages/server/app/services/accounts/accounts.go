@@ -2,39 +2,77 @@ package accounts
 
 import (
 	"errors"
+	"fmt"
 
 	models "go.labs/server/app/models"
+	"gorm.io/gorm"
 )
 
 type AccountsService struct {
-	model *models.AccountModel
+	DB *gorm.DB
 }
 
-func NewAccountsService() *AccountsService {
-	return &AccountsService{models.NewAccountModel()}
+func NewAccountsService(db *gorm.DB) Account {
+	return &AccountsService{DB: db}
+}
+
+type Account interface {
+	GetAllAccounts() []models.Account
+	GetOneByEmail(email string) *models.Account
+	AddAccount(account *models.Account) error
+	RemoveAccount(id int)
 }
 
 func (a *AccountsService) GetAllAccounts() []models.Account {
-	return a.model.FindAll()
+	var accounts []models.Account
+
+	if result := a.DB.Find(&accounts); result.Error != nil {
+		fmt.Println(result.Error)
+		return nil
+	}
+
+	return accounts
 }
 
 func (a *AccountsService) GetOneAccount(id int) *models.Account {
-	return a.model.FindOne(id)
+	account := &models.Account{}
+
+	if result := a.DB.First(account, id); result.Error != nil {
+		fmt.Println(result.Error)
+		return nil
+	}
+
+	return account
 }
 
 func (a *AccountsService) GetOneByEmail(email string) *models.Account {
-	return a.model.FindOneByEmail(email)
+	account := &models.Account{}
+
+	if result := a.DB.Where("email = ?", email).First(account); result.Error != nil {
+		fmt.Println(result.Error)
+		return nil
+	}
+
+	return account
 }
 
 func (a *AccountsService) AddAccount(account *models.Account) error {
-	if a.model.ExistsByEmail(account.Email) {
+	if a.GetOneByEmail(account.Email) != nil {
 		return errors.New("account with this email already exists")
 	}
 
-	a.model.Add(account)
+	if result := a.DB.Create(account); result.Error != nil {
+		fmt.Println(result.Error)
+		return errors.New("error while saving account")
+	}
+
 	return nil
 }
 
 func (a *AccountsService) RemoveAccount(id int) {
-	a.model.Delete(id)
+	account := a.GetOneAccount(id)
+
+	if result := a.DB.Delete(account); result.Error != nil {
+		fmt.Println(result.Error)
+	}
 }

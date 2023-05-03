@@ -9,15 +9,23 @@ import (
 	"go.labs/server/app/services/accounts"
 	"go.labs/server/app/services/tokens"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type AuthService struct {
-	tokenModel      *models.TokenModel
-	accountsService *accounts.AccountsService
+	DB      *gorm.DB
+	Account accounts.Account
 }
 
-func NewAuthService(accountService *accounts.AccountsService) *AuthService {
-	return &AuthService{models.NewTokenModel(), accountService}
+func NewAuthService(db *gorm.DB, account accounts.Account) Auth {
+	return &AuthService{DB: db, Account: account}
+}
+
+type Auth interface {
+	Register(email string, password string) (*tokens.Tokens, error)
+	Login(email string, password string) (*tokens.Tokens, error)
+	Validate(tokenString string) (*models.Account, error)
+	Refresh(tokenString string) (*tokens.Tokens, error)
 }
 
 func (a *AuthService) Register(email string, password string) (*tokens.Tokens, error) {
@@ -39,18 +47,19 @@ func (a *AuthService) Register(email string, password string) (*tokens.Tokens, e
 	}
 
 	account := &models.Account{Email: email, Hash: hash}
-	a.tokenModel.Add(&models.Token{Account: account, RefreshToken: refreshToken})
 
-	err = a.accountsService.AddAccount(account)
+	err = a.Account.AddAccount(account)
 	if err != nil {
 		return nil, err
 	}
+
+	a.DB.Create(&models.Token{Account: *account, RefreshToken: refreshToken})
 
 	return &tokens.Tokens{AccessToken: accessToken, RefreshToken: refreshToken}, nil
 }
 
 func (a *AuthService) Login(email string, password string) (*tokens.Tokens, error) {
-	account := a.accountsService.GetOneByEmail(email)
+	account := a.Account.GetOneByEmail(email)
 	if account == nil {
 		return nil, errors.New("account not found")
 	}
@@ -70,7 +79,7 @@ func (a *AuthService) Login(email string, password string) (*tokens.Tokens, erro
 		return nil, err
 	}
 
-	a.tokenModel.UpdateByAccount(account, refreshToken)
+	a.DB.Model(&models.Token{}).Where("account_id = ?", account.ID).Updates(&models.Token{RefreshToken: refreshToken})
 
 	return &tokens.Tokens{AccessToken: accessToken, RefreshToken: refreshToken}, nil
 }
@@ -90,7 +99,7 @@ func (a *AuthService) Validate(tokenString string) (*models.Account, error) {
 	email := fmt.Sprint(claims["email"])
 	hash := fmt.Sprint(claims["hash"])
 
-	account := a.accountsService.GetOneByEmail(email)
+	account := a.Account.GetOneByEmail(email)
 
 	if account == nil {
 		return nil, errors.New("account not found")
@@ -119,7 +128,7 @@ func (a *AuthService) Refresh(tokenString string) (*tokens.Tokens, error) {
 	email := fmt.Sprint(claims["email"])
 	hash := fmt.Sprint(claims["hash"])
 
-	account := a.accountsService.GetOneByEmail(email)
+	account := a.Account.GetOneByEmail(email)
 
 	if account == nil {
 		return nil, errors.New("account not found")
@@ -139,7 +148,10 @@ func (a *AuthService) Refresh(tokenString string) (*tokens.Tokens, error) {
 		return nil, err
 	}
 
-	a.tokenModel.UpdateByAccount(account, refreshToken)
+	if result := a.DB.Model(&models.Token{}).Where("account_id = ?", account.ID).Update("refresh_token", refreshToken); result.Error != nil {
+		fmt.Println(result.Error)
+		return nil, errors.New("failed to save refresh token")
+	}
 
 	return &tokens.Tokens{AccessToken: accessToken, RefreshToken: refreshToken}, nil
 }
