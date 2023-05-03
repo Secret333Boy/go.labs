@@ -21,7 +21,7 @@ func Init() *gorm.DB {
 		log.Fatalln(err)
 	}
 
-	err = db.AutoMigrate(&models.Account{}, &models.Token{})
+	err = db.AutoMigrate(&models.Account{}, &models.Token{}, &models.Post{})
 	if err != nil {
 		log.Fatalln(err)
 	}
