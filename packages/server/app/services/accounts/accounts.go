@@ -12,6 +12,17 @@ type AccountsService struct {
 	DB *gorm.DB
 }
 
+func NewAccountsService(db *gorm.DB) Account {
+	return &AccountsService{DB: db}
+}
+
+type Account interface {
+	GetAllAccounts() []models.Account
+	GetOneByEmail(email string) *models.Account
+	AddAccount(account *models.Account) error
+	RemoveAccount(id int)
+}
+
 func (a *AccountsService) GetAllAccounts() []models.Account {
 	var accounts []models.Account
 

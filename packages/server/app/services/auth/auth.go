@@ -13,8 +13,19 @@ import (
 )
 
 type AuthService struct {
-	DB              *gorm.DB
-	AccountsService *accounts.AccountsService
+	DB      *gorm.DB
+	Account accounts.Account
+}
+
+func NewAuthService(db *gorm.DB, account accounts.Account) Auth {
+	return &AuthService{DB: db, Account: account}
+}
+
+type Auth interface {
+	Register(email string, password string) (*tokens.Tokens, error)
+	Login(email string, password string) (*tokens.Tokens, error)
+	Validate(tokenString string) (*models.Account, error)
+	Refresh(tokenString string) (*tokens.Tokens, error)
 }
 
 func (a *AuthService) Register(email string, password string) (*tokens.Tokens, error) {
@@ -37,7 +48,7 @@ func (a *AuthService) Register(email string, password string) (*tokens.Tokens, e
 
 	account := &models.Account{Email: email, Hash: hash}
 
-	err = a.AccountsService.AddAccount(account)
+	err = a.Account.AddAccount(account)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +59,7 @@ func (a *AuthService) Register(email string, password string) (*tokens.Tokens, e
 }
 
 func (a *AuthService) Login(email string, password string) (*tokens.Tokens, error) {
-	account := a.AccountsService.GetOneByEmail(email)
+	account := a.Account.GetOneByEmail(email)
 	if account == nil {
 		return nil, errors.New("account not found")
 	}
@@ -88,7 +99,7 @@ func (a *AuthService) Validate(tokenString string) (*models.Account, error) {
 	email := fmt.Sprint(claims["email"])
 	hash := fmt.Sprint(claims["hash"])
 
-	account := a.AccountsService.GetOneByEmail(email)
+	account := a.Account.GetOneByEmail(email)
 
 	if account == nil {
 		return nil, errors.New("account not found")
@@ -117,7 +128,7 @@ func (a *AuthService) Refresh(tokenString string) (*tokens.Tokens, error) {
 	email := fmt.Sprint(claims["email"])
 	hash := fmt.Sprint(claims["hash"])
 
-	account := a.AccountsService.GetOneByEmail(email)
+	account := a.Account.GetOneByEmail(email)
 
 	if account == nil {
 		return nil, errors.New("account not found")
