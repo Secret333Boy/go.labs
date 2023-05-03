@@ -13,4 +13,5 @@ type Post struct {
 	Description string
 	PublishedAt time.Time
 	//Tags        []string
+	//TODO:fix relation
 }
