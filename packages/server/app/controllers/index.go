@@ -8,6 +8,7 @@ import (
 	"go.labs/server/app/controllers/api/accounts"
 	"go.labs/server/app/controllers/api/auth"
 	"go.labs/server/app/controllers/api/posts"
+	"go.labs/server/app/db"
 	"go.labs/server/app/middlewares"
 	accountsService "go.labs/server/app/services/accounts"
 	authService "go.labs/server/app/services/auth"
@@ -15,14 +16,16 @@ import (
 )
 
 func GetIndexRouter() *httprouter.Router {
+	db := db.Init()
+
 	router := httprouter.New()
 
 	router.GET("/api", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		fmt.Fprintf(w, "go.labs v1.0")
 	})
 
-	accountsService := accountsService.NewAccountsService()
-	authService := authService.NewAuthService(accountsService)
+	accountsService := &accountsService.AccountsService{DB: db}
+	authService := &authService.AuthService{DB: db, AccountsService: accountsService}
 	postsService := postsService.NewPostsService()
 
 	useAuthMiddleware := middlewares.NewUseAuthMiddleware(authService)
