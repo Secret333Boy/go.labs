@@ -76,89 +76,97 @@ func (p *PostsService) RemovePost(account *models.Account, id int) error {
 	return nil
 }
 
-//
-//func (p *PostsService) GetAllMessagesByPostId(postId int, limit int, offset int) ([]models.Message, error) {
-//	if !p.postModel.Exists(postId) {
-//		return nil, errors.New("post not found")
-//	}
-//	return p.messageModel.FindAll(postId, limit, offset), nil
-//}
-//
-//func (p *PostsService) GetOneMessageByPostId(postId int, messageId int) (*models.Message, error) {
-//	if !p.postModel.Exists(postId) {
-//		return nil, errors.New("post not found")
-//	}
-//	return p.messageModel.FindOne(postId, messageId), nil
-//}
-//
-//func (p *PostsService) AddMessageByPostId(account *models.Account, postId int, text string) error {
-//	if !p.postModel.Exists(postId) {
-//		return errors.New("post not found")
-//	}
-//	message := &models.Message{Account: account, Post: p.GetOnePost(postId), Text: text, PublishedAt: time.Now()}
-//	p.messageModel.Add(message)
-//	return nil
-//}
-//
-//func (p *PostsService) UpdateMessageByPostId(account *models.Account, postId int, messageId int, text string) error {
-//	if !p.postModel.Exists(postId) {
-//		return errors.New("post not found")
-//	}
-//	if !(p.GetAccountByPostId(postId).ID == account.ID) {
-//		return errors.New("access denied")
-//	}
-//	message := &models.Message{Text: text}
-//	p.messageModel.Update(postId, messageId, message)
-//	return nil
-//}
-//
-//func (p *PostsService) RemoveMessageByPostId(account *models.Account, postId int, messageId int) error {
-//	if !p.postModel.Exists(postId) {
-//		return errors.New("post not found")
-//	}
-//	if !(p.GetAccountByPostId(postId).ID == account.ID) {
-//		return errors.New("access denied")
-//	}
-//	if !p.messageModel.Exists(messageId) {
-//		return errors.New("message not found")
-//	}
-//	p.messageModel.Delete(messageId)
-//	return nil
-//}
-//
-//func (model *PostModel) FindAccountByPostId(id int) *Account {
-//	for _, post := range model.posts {
-//		if post.Id == id {
-//			return post.Account
-//		}
-//	}
-//	return nil
-//}
-//
-//func (model *PostModel) Update(id int, updatedPost *Post) {
-//	for _, post := range model.posts {
-//		if post.Id == id {
-//			model.posts[id-1].Title = updatedPost.Title
-//			model.posts[id-1].Description = updatedPost.Description
-//		}
-//	}
-//}
-//
-//func (model *PostModel) Delete(id int) {
-//	for i, post := range model.posts {
-//		if post.Id == id {
-//			post.model = nil
-//			model.posts = append(model.posts[:i], model.posts[i+1:]...)
-//			return
-//		}
-//	}
-//}
-//
-//func (model *PostModel) Exists(id int) bool {
-//	for _, post := range model.posts {
-//		if post.Id == id {
-//			return true
-//		}
-//	}
-//	return false
-//}
+func (p *PostsService) GetAllMessagesByPostId(postId int, limit int, offset int) ([]models.Message, error) {
+
+	post := p.GetOnePost(postId)
+	var messages []models.Message
+
+	if post != nil {
+		if result := p.DB.Offset(offset).Limit(limit).Find(&messages); result.Error != nil {
+			return nil, result.Error
+		}
+	} else {
+		return nil, errors.New("This post is not exist")
+	}
+	return messages, nil
+}
+
+func (p *PostsService) GetOneMessageByPostId(postId int, messageId int) (*models.Message, error) {
+
+	post := p.GetOnePost(postId)
+	message := &models.Message{}
+
+	if post != nil {
+		result := p.DB.First(&message, messageId)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+	} else {
+		return nil, errors.New("This post is not exist")
+	}
+	//TODO: return 404
+	return message, nil
+}
+
+func (p *PostsService) AddMessageByPostId(account *models.Account, postId int, text string) error {
+
+	post := p.GetOnePost(postId)
+
+	if post != nil {
+		message := &models.Message{AccountID: account.ID, PostID: uint(postId), Text: text, PublishedAt: time.Now()}
+		if result := p.DB.Create(&message); result.Error != nil {
+			return result.Error
+		}
+	} else {
+		return errors.New("This post is not exist")
+	}
+	return nil
+}
+
+func (p *PostsService) UpdateMessageByPostId(account *models.Account, postId int, messageId int, text string) error {
+
+	post := p.GetOnePost(postId)
+
+	if post != nil {
+
+		message, err := p.GetOneMessageByPostId(postId, messageId)
+		if err == nil {
+			if result := p.DB.Find(&message, "ID = ? AND Account_ID = ? AND Post_ID = ?", messageId, account.ID, postId); result.Error != nil {
+				fmt.Println(result.Error)
+				return errors.New("access denied")
+			}
+			message.Text = text
+			p.DB.Save(&message)
+		} else {
+			return errors.New("message not found")
+		}
+
+	} else {
+		return errors.New("post not found")
+	}
+	return nil
+
+}
+
+func (p *PostsService) RemoveMessageByPostId(account *models.Account, postId int, messageId int) error {
+
+	post := p.GetOnePost(postId)
+
+	if post != nil {
+		message, err := p.GetOneMessageByPostId(postId, messageId)
+		if err == nil {
+			if result := p.DB.Find(&message, "ID = ? AND Account_ID = ? AND Post_ID = ?", messageId, account.ID, postId); result.Error != nil {
+				fmt.Println(result.Error)
+				return errors.New("access denied")
+			}
+			if result := p.DB.Delete(message); result.Error != nil {
+				fmt.Println(result.Error)
+			}
+		} else {
+			return errors.New("message not found")
+		}
+	} else {
+		return errors.New("post not found")
+	}
+	return nil
+}

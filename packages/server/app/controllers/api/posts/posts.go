@@ -82,7 +82,11 @@ func (h *PostsHandler) createPost(w http.ResponseWriter, r *http.Request, _ http
 		http.Error(w, validationErr.Error(), http.StatusBadRequest)
 		return
 	}
-	h.service.AddPost(account, createPostDto.Title, createPostDto.Description)
+	err = h.service.AddPost(account, createPostDto.Title, createPostDto.Description)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 }
 
 func (h *PostsHandler) getPost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
