@@ -8,10 +8,8 @@ import (
 type Post struct {
 	gorm.Model
 	AccountID   uint
-	Account     Account `gorm:"constraint:OnDelete:CASCADE;"`
 	Title       string
 	Description string
 	PublishedAt time.Time
-	//Tags        []string
-	//TODO:fix relation
+	Messages    []Message `gorm:"foreignKey:AccountID;constraint:OnDelete:CASCADE"`
 }
