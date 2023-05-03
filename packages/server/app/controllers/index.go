@@ -26,7 +26,8 @@ func GetIndexRouter() *httprouter.Router {
 
 	accountsService := &accountsService.AccountsService{DB: db}
 	authService := &authService.AuthService{DB: db, AccountsService: accountsService}
-	postsService := &postsService.PostsService{DB: db}
+
+	postsService := postsService.NewPostsService(db)
 
 	useAuthMiddleware := middlewares.NewUseAuthMiddleware(authService)
 

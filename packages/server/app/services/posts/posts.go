@@ -3,17 +3,34 @@ package posts
 import (
 	"errors"
 	"fmt"
+	"go.labs/server/app/models"
 	"gorm.io/gorm"
 	"time"
-
-	"go.labs/server/app/models"
 )
 
-type PostsService struct {
+type postsService struct {
 	DB *gorm.DB
 }
 
-func (p *PostsService) GetAllPosts(limit int, offset int) []models.Post {
+func NewPostsService(db *gorm.DB) PostsAndMessages {
+	return &postsService{DB: db}
+}
+
+type PostsAndMessages interface {
+	GetAllPosts(limit int, offset int) []models.Post
+	GetOnePost(id int) *models.Post
+	AddPost(account *models.Account, title string, description string) error
+	UpdatePost(account *models.Account, id int, title string, description string) error
+	RemovePost(account *models.Account, id int) error
+
+	GetAllMessagesByPostId(postId int, limit int, offset int) ([]models.Message, error)
+	GetOneMessageByPostId(postId int, messageId int) (*models.Message, error)
+	AddMessageByPostId(account *models.Account, postId int, text string) error
+	UpdateMessageByPostId(account *models.Account, postId int, messageId int, text string) error
+	RemoveMessageByPostId(account *models.Account, postId int, messageId int) error
+}
+
+func (p *postsService) GetAllPosts(limit int, offset int) []models.Post {
 	var posts []models.Post
 	if result := p.DB.Offset(offset).Limit(limit).Find(&posts); result.Error != nil {
 		fmt.Println(result.Error)
@@ -22,7 +39,7 @@ func (p *PostsService) GetAllPosts(limit int, offset int) []models.Post {
 	return posts
 }
 
-func (p *PostsService) GetOnePost(id int) *models.Post {
+func (p *postsService) GetOnePost(id int) *models.Post {
 	post := &models.Post{}
 	result := p.DB.First(post, id)
 	if result.Error != nil {
@@ -33,7 +50,7 @@ func (p *PostsService) GetOnePost(id int) *models.Post {
 	return post
 }
 
-func (p *PostsService) AddPost(account *models.Account, title string, description string) error {
+func (p *postsService) AddPost(account *models.Account, title string, description string) error {
 	post := &models.Post{AccountID: account.ID, Title: title, Description: description, PublishedAt: time.Now()}
 
 	if result := p.DB.Create(&post); result.Error != nil {
@@ -44,7 +61,7 @@ func (p *PostsService) AddPost(account *models.Account, title string, descriptio
 	return nil
 }
 
-func (p *PostsService) UpdatePost(account *models.Account, id int, title string, description string) error {
+func (p *postsService) UpdatePost(account *models.Account, id int, title string, description string) error {
 	post := p.GetOnePost(id)
 	if post != nil {
 		if result := p.DB.Find(&post, "ID = ? AND Account_ID = ?", id, account.ID); result.Error != nil {
@@ -60,7 +77,7 @@ func (p *PostsService) UpdatePost(account *models.Account, id int, title string,
 	return nil
 }
 
-func (p *PostsService) RemovePost(account *models.Account, id int) error {
+func (p *postsService) RemovePost(account *models.Account, id int) error {
 	post := p.GetOnePost(id)
 	if post != nil {
 		if result := p.DB.Find(&post, "ID = ? AND Account_ID = ?", id, account.ID); result.Error != nil {
@@ -76,7 +93,7 @@ func (p *PostsService) RemovePost(account *models.Account, id int) error {
 	return nil
 }
 
-func (p *PostsService) GetAllMessagesByPostId(postId int, limit int, offset int) ([]models.Message, error) {
+func (p *postsService) GetAllMessagesByPostId(postId int, limit int, offset int) ([]models.Message, error) {
 
 	post := p.GetOnePost(postId)
 	var messages []models.Message
@@ -91,7 +108,7 @@ func (p *PostsService) GetAllMessagesByPostId(postId int, limit int, offset int)
 	return messages, nil
 }
 
-func (p *PostsService) GetOneMessageByPostId(postId int, messageId int) (*models.Message, error) {
+func (p *postsService) GetOneMessageByPostId(postId int, messageId int) (*models.Message, error) {
 
 	post := p.GetOnePost(postId)
 	message := &models.Message{}
@@ -108,7 +125,7 @@ func (p *PostsService) GetOneMessageByPostId(postId int, messageId int) (*models
 	return message, nil
 }
 
-func (p *PostsService) AddMessageByPostId(account *models.Account, postId int, text string) error {
+func (p *postsService) AddMessageByPostId(account *models.Account, postId int, text string) error {
 
 	post := p.GetOnePost(postId)
 
@@ -123,7 +140,7 @@ func (p *PostsService) AddMessageByPostId(account *models.Account, postId int, t
 	return nil
 }
 
-func (p *PostsService) UpdateMessageByPostId(account *models.Account, postId int, messageId int, text string) error {
+func (p *postsService) UpdateMessageByPostId(account *models.Account, postId int, messageId int, text string) error {
 
 	post := p.GetOnePost(postId)
 
@@ -148,7 +165,7 @@ func (p *PostsService) UpdateMessageByPostId(account *models.Account, postId int
 
 }
 
-func (p *PostsService) RemoveMessageByPostId(account *models.Account, postId int, messageId int) error {
+func (p *postsService) RemoveMessageByPostId(account *models.Account, postId int, messageId int) error {
 
 	post := p.GetOnePost(postId)
 

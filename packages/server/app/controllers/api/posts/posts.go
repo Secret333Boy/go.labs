@@ -12,11 +12,11 @@ import (
 )
 
 type PostsHandler struct {
-	service           *posts.PostsService
+	service           posts.PostsAndMessages
 	useAuthMiddleware *middlewares.UseAuthMiddleware
 }
 
-func NewPostsHandler(service *posts.PostsService, useAuthMiddleware *middlewares.UseAuthMiddleware) *PostsHandler {
+func NewPostsHandler(service posts.PostsAndMessages, useAuthMiddleware *middlewares.UseAuthMiddleware) *PostsHandler {
 	return &PostsHandler{service: service, useAuthMiddleware: useAuthMiddleware}
 }
 
