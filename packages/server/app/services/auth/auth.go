@@ -9,16 +9,20 @@ import (
 	"go.labs/server/app/services/accounts"
 	"go.labs/server/app/services/tokens"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
-type AuthService struct {
-	DB      *gorm.DB
-	Account accounts.Account
+type tokenRepository interface {
+	CreateToken(token *models.Token)
+	UpdateToken(account *models.Account, refreshToken string) error
 }
 
-func NewAuthService(db *gorm.DB, account accounts.Account) Auth {
-	return &AuthService{DB: db, Account: account}
+type AuthService struct {
+	tokenRepository tokenRepository
+	Account         accounts.Account
+}
+
+func NewAuthService(tokenRepository tokenRepository, account accounts.Account) Auth {
+	return &AuthService{tokenRepository: tokenRepository, Account: account}
 }
 
 type Auth interface {
@@ -53,7 +57,7 @@ func (a *AuthService) Register(email string, password string) (*tokens.Tokens, e
 		return nil, err
 	}
 
-	a.DB.Create(&models.Token{Account: *account, RefreshToken: refreshToken})
+	a.tokenRepository.CreateToken(&models.Token{Account: *account, RefreshToken: refreshToken})
 
 	return &tokens.Tokens{AccessToken: accessToken, RefreshToken: refreshToken}, nil
 }
@@ -79,7 +83,10 @@ func (a *AuthService) Login(email string, password string) (*tokens.Tokens, erro
 		return nil, err
 	}
 
-	a.DB.Model(&models.Token{}).Where("account_id = ?", account.ID).Updates(&models.Token{RefreshToken: refreshToken})
+	err = a.tokenRepository.UpdateToken(account, refreshToken)
+	if err != nil {
+		return nil, err
+	}
 
 	return &tokens.Tokens{AccessToken: accessToken, RefreshToken: refreshToken}, nil
 }
@@ -148,9 +155,9 @@ func (a *AuthService) Refresh(tokenString string) (*tokens.Tokens, error) {
 		return nil, err
 	}
 
-	if result := a.DB.Model(&models.Token{}).Where("account_id = ?", account.ID).Update("refresh_token", refreshToken); result.Error != nil {
-		fmt.Println(result.Error)
-		return nil, errors.New("failed to save refresh token")
+	err = a.tokenRepository.UpdateToken(account, refreshToken)
+	if err != nil {
+		return nil, err
 	}
 
 	return &tokens.Tokens{AccessToken: accessToken, RefreshToken: refreshToken}, nil
