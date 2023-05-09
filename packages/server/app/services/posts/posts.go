@@ -2,18 +2,32 @@ package posts
 
 import (
 	"errors"
-	"fmt"
+
 	"go.labs/server/app/models"
-	"gorm.io/gorm"
-	"time"
 )
 
-type postsService struct {
-	DB *gorm.DB
+type postRepository interface {
+	FindAllPosts(limit int, offset int) []models.Post
+	FindOnePost(id int) *models.Post
+	CreatePost(account *models.Account, title string, description string) error
+	UpdatePost(post *models.Post, account *models.Account, title string, description string) error
+	RemovePost(post *models.Post, account *models.Account) error
+}
+type messageRepository interface {
+	FindAllMessagesByPostId(postId int, limit int, offset int) ([]models.Message, error)
+	FindOneMessageByPostId(postId int, messageId int) (*models.Message, error)
+	CreateMessage(account *models.Account, postId int, text string) error
+	UpdateMessage(message *models.Message, account *models.Account, postId int, messageId int, text string) error
+	RemoveMessage(message *models.Message, account *models.Account, postId int, messageId int) error
 }
 
-func NewPostsService(db *gorm.DB) Posts {
-	return &postsService{DB: db}
+type postsService struct {
+	postRepository    postRepository
+	messageRepository messageRepository
+}
+
+func NewPostsService(postRepository postRepository, messageRepository messageRepository) Posts {
+	return &postsService{postRepository: postRepository, messageRepository: messageRepository}
 }
 
 type Posts interface {
@@ -31,159 +45,85 @@ type Posts interface {
 }
 
 func (p *postsService) GetAllPosts(limit int, offset int) []models.Post {
-	var posts []models.Post
-	if result := p.DB.Offset(offset).Limit(limit).Find(&posts); result.Error != nil {
-		fmt.Println(result.Error)
-		return nil
-	}
-	return posts
+	return p.postRepository.FindAllPosts(limit, offset)
 }
 
 func (p *postsService) GetOnePost(id int) *models.Post {
-	post := &models.Post{}
-	result := p.DB.First(post, id)
-	if result.Error != nil {
-		fmt.Println(result.Error)
-		return nil
-	}
-	//TODO: return 404
-	return post
+	return p.postRepository.FindOnePost(id)
 }
 
 func (p *postsService) AddPost(account *models.Account, title string, description string) error {
-	post := &models.Post{AccountID: account.ID, Title: title, Description: description, PublishedAt: time.Now()}
-
-	if result := p.DB.Create(&post); result.Error != nil {
-		fmt.Println(result.Error)
-		return errors.New("error while creating post")
-	}
-
-	return nil
+	return p.postRepository.CreatePost(account, title, description)
 }
 
 func (p *postsService) UpdatePost(account *models.Account, id int, title string, description string) error {
 	post := p.GetOnePost(id)
-	if post != nil {
-		if result := p.DB.Find(&post, "ID = ? AND Account_ID = ?", id, account.ID); result.Error != nil {
-			fmt.Println(result.Error)
-			return errors.New("access denied")
-		}
-		post.Title = title
-		post.Description = description
-		p.DB.Save(&post)
-	} else {
-		return errors.New("post not found")
-	}
-	return nil
+	return p.postRepository.UpdatePost(post, account, title, description)
 }
 
 func (p *postsService) RemovePost(account *models.Account, id int) error {
 	post := p.GetOnePost(id)
-	if post != nil {
-		if result := p.DB.Find(&post, "ID = ? AND Account_ID = ?", id, account.ID); result.Error != nil {
-			fmt.Println(result.Error)
-			return errors.New("access denied")
-		}
-		if result := p.DB.Delete(post); result.Error != nil {
-			fmt.Println(result.Error)
-		}
-	} else {
-		return errors.New("post not found")
-	}
-	return nil
+	return p.postRepository.RemovePost(post, account)
 }
 
 func (p *postsService) GetAllMessagesByPostId(postId int, limit int, offset int) ([]models.Message, error) {
 
 	post := p.GetOnePost(postId)
-	var messages []models.Message
 
-	if post != nil {
-		if result := p.DB.Offset(offset).Limit(limit).Find(&messages); result.Error != nil {
-			return nil, result.Error
-		}
-	} else {
+	if post == nil {
 		return nil, errors.New("This post is not exist")
 	}
-	return messages, nil
+
+	return p.messageRepository.FindAllMessagesByPostId(postId, limit, offset)
 }
 
 func (p *postsService) GetOneMessageByPostId(postId int, messageId int) (*models.Message, error) {
-
 	post := p.GetOnePost(postId)
-	message := &models.Message{}
 
-	if post != nil {
-		result := p.DB.First(&message, messageId)
-		if result.Error != nil {
-			return nil, result.Error
-		}
-	} else {
+	if post == nil {
 		return nil, errors.New("This post is not exist")
 	}
-	//TODO: return 404
-	return message, nil
+
+	return p.messageRepository.FindOneMessageByPostId(postId, messageId)
 }
 
 func (p *postsService) AddMessageByPostId(account *models.Account, postId int, text string) error {
-
 	post := p.GetOnePost(postId)
 
-	if post != nil {
-		message := &models.Message{AccountID: account.ID, PostID: uint(postId), Text: text, PublishedAt: time.Now()}
-		if result := p.DB.Create(&message); result.Error != nil {
-			return result.Error
-		}
-	} else {
+	if post == nil {
 		return errors.New("This post is not exist")
+
 	}
-	return nil
+
+	return p.messageRepository.CreateMessage(account, postId, text)
 }
 
 func (p *postsService) UpdateMessageByPostId(account *models.Account, postId int, messageId int, text string) error {
-
 	post := p.GetOnePost(postId)
 
-	if post != nil {
-
-		message, err := p.GetOneMessageByPostId(postId, messageId)
-		if err == nil {
-			if result := p.DB.Find(&message, "ID = ? AND Account_ID = ? AND Post_ID = ?", messageId, account.ID, postId); result.Error != nil {
-				fmt.Println(result.Error)
-				return errors.New("access denied")
-			}
-			message.Text = text
-			p.DB.Save(&message)
-		} else {
-			return errors.New("message not found")
-		}
-
-	} else {
+	if post == nil {
 		return errors.New("post not found")
 	}
-	return nil
 
+	message, err := p.GetOneMessageByPostId(postId, messageId)
+	if err != nil {
+		return errors.New("message not found")
+	}
+
+	return p.messageRepository.UpdateMessage(message, account, postId, messageId, text)
 }
 
 func (p *postsService) RemoveMessageByPostId(account *models.Account, postId int, messageId int) error {
-
 	post := p.GetOnePost(postId)
 
-	if post != nil {
-		message, err := p.GetOneMessageByPostId(postId, messageId)
-		if err == nil {
-			if result := p.DB.Find(&message, "ID = ? AND Account_ID = ? AND Post_ID = ?", messageId, account.ID, postId); result.Error != nil {
-				fmt.Println(result.Error)
-				return errors.New("access denied")
-			}
-			if result := p.DB.Delete(message); result.Error != nil {
-				fmt.Println(result.Error)
-			}
-		} else {
-			return errors.New("message not found")
-		}
-	} else {
+	if post == nil {
 		return errors.New("post not found")
 	}
-	return nil
+
+	message, err := p.GetOneMessageByPostId(postId, messageId)
+	if err != nil {
+		return errors.New("message not found")
+	}
+
+	return p.messageRepository.RemoveMessage(message, account, postId, messageId)
 }

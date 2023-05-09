@@ -10,6 +10,10 @@ import (
 	"go.labs/server/app/controllers/api/posts"
 	"go.labs/server/app/db"
 	"go.labs/server/app/middlewares"
+	accountRepository "go.labs/server/app/repositories/account"
+	messageRepository "go.labs/server/app/repositories/message"
+	postRepository "go.labs/server/app/repositories/post"
+	tokenRepository "go.labs/server/app/repositories/token"
 	accountsService "go.labs/server/app/services/accounts"
 	authService "go.labs/server/app/services/auth"
 	postsService "go.labs/server/app/services/posts"
@@ -24,11 +28,14 @@ func GetIndexRouter() *httprouter.Router {
 		fmt.Fprintf(w, "go.labs v1.0")
 	})
 
-	accountsService := accountsService.NewAccountsService(db)
+	accountRepository := accountRepository.NewAccountRepository(db)
+	postRepository := postRepository.NewPostRepository(db)
+	messageRepository := messageRepository.NewMessageRepository(db)
+	tokenRepository := tokenRepository.NewTokenRepository(db)
 
-	authService := authService.NewAuthService(db, accountsService)
-
-	postsService := postsService.NewPostsService(db)
+	accountsService := accountsService.NewAccountsService(accountRepository)
+	authService := authService.NewAuthService(tokenRepository, accountsService)
+	postsService := postsService.NewPostsService(postRepository, messageRepository)
 
 	useAuthMiddleware := middlewares.NewUseAuthMiddleware(authService)
 

@@ -2,18 +2,24 @@ package accounts
 
 import (
 	"errors"
-	"fmt"
 
 	models "go.labs/server/app/models"
-	"gorm.io/gorm"
 )
 
-type AccountsService struct {
-	DB *gorm.DB
+type accountsRepository interface {
+	FindAllAccounts() []models.Account
+	FindOneAccount(id int) *models.Account
+	FindOneAccountByEmail(email string) *models.Account
+	CreateAccount(account *models.Account) error
+	DeleteAccount(account *models.Account)
 }
 
-func NewAccountsService(db *gorm.DB) Account {
-	return &AccountsService{DB: db}
+type AccountsService struct {
+	accountsRepository accountsRepository
+}
+
+func NewAccountsService(accountsRepository accountsRepository) Account {
+	return &AccountsService{accountsRepository: accountsRepository}
 }
 
 type Account interface {
@@ -24,36 +30,15 @@ type Account interface {
 }
 
 func (a *AccountsService) GetAllAccounts() []models.Account {
-	var accounts []models.Account
-
-	if result := a.DB.Find(&accounts); result.Error != nil {
-		fmt.Println(result.Error)
-		return nil
-	}
-
-	return accounts
+	return a.accountsRepository.FindAllAccounts()
 }
 
 func (a *AccountsService) GetOneAccount(id int) *models.Account {
-	account := &models.Account{}
-
-	if result := a.DB.First(account, id); result.Error != nil {
-		fmt.Println(result.Error)
-		return nil
-	}
-
-	return account
+	return a.accountsRepository.FindOneAccount(id)
 }
 
 func (a *AccountsService) GetOneByEmail(email string) *models.Account {
-	account := &models.Account{}
-
-	if result := a.DB.Where("email = ?", email).First(account); result.Error != nil {
-		fmt.Println(result.Error)
-		return nil
-	}
-
-	return account
+	return a.accountsRepository.FindOneAccountByEmail(email)
 }
 
 func (a *AccountsService) AddAccount(account *models.Account) error {
@@ -61,18 +46,10 @@ func (a *AccountsService) AddAccount(account *models.Account) error {
 		return errors.New("account with this email already exists")
 	}
 
-	if result := a.DB.Create(account); result.Error != nil {
-		fmt.Println(result.Error)
-		return errors.New("error while saving account")
-	}
-
-	return nil
+	return a.accountsRepository.CreateAccount(account)
 }
 
 func (a *AccountsService) RemoveAccount(id int) {
 	account := a.GetOneAccount(id)
-
-	if result := a.DB.Delete(account); result.Error != nil {
-		fmt.Println(result.Error)
-	}
+	a.accountsRepository.DeleteAccount(account)
 }
