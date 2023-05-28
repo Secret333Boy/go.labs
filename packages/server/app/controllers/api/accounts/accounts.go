@@ -19,7 +19,7 @@ func NewAccountsHandler(service accounts.Account, useAuthMiddleware *middlewares
 }
 
 func (h *AccountsHandler) RegisterHandler(router *httprouter.Router) {
-	router.GET("/api/accounts", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.GET("/api/accounts", middlewares.EnableCors(func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		account, err := h.useAuthMiddleware.UseAuth(w, r)
 		if err != nil {
 			return
@@ -30,5 +30,5 @@ func (h *AccountsHandler) RegisterHandler(router *httprouter.Router) {
 		if err != nil {
 			http.Error(w, "Failed reading json file", http.StatusInternalServerError)
 		}
-	})
+	}))
 }

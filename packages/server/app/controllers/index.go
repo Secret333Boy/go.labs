@@ -47,5 +47,7 @@ func GetIndexRouter() *httprouter.Router {
 	accountsHandler.RegisterHandler(router)
 	postsHandler.RegisterHandler(router)
 
+	router.OPTIONS("/*name", middlewares.EnableCors(func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {}))
+
 	return router
 }

@@ -20,15 +20,15 @@ func NewAuthHandler(service auth.Auth) *AuthHandler {
 }
 
 func (h *AuthHandler) RegisterHandler(router *httprouter.Router) {
-	router.POST("/api/auth/register", h.register)
+	router.POST("/api/auth/register", middlewares.EnableCors(h.register))
 
-	router.POST("/api/auth/login", h.login)
+	router.POST("/api/auth/login", middlewares.EnableCors(h.login))
 
-	router.GET("/api/auth/validate", h.validate)
+	router.GET("/api/auth/validate", middlewares.EnableCors(h.validate))
 
-	router.GET("/api/auth/refresh", h.refresh)
+	router.GET("/api/auth/refresh", middlewares.EnableCors(h.refresh))
 
-	router.GET("/api/auth/logout", h.logout)
+	router.GET("/api/auth/logout", middlewares.EnableCors(h.logout))
 }
 
 func (h *AuthHandler) register(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
