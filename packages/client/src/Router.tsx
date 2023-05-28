@@ -25,11 +25,9 @@ const Protected: FC<ProtectedProps> = ({ children }) => {
       const { ok } = await ApiService.get("/auth/validate");
 
       if (!ok) {
-        const { data, ok: refreshOk } = await ApiService.get<{
-          accessToken: string;
-        }>("/auth/refresh");
+        const { data, ok: refreshOk } = await ApiService.get<string>("/auth/refresh");
         if (!data || !refreshOk) return setIsLoaded(true);
-        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("accessToken", data);
       }
 
       const { data } = await ApiService.get<Account>("/accounts");
