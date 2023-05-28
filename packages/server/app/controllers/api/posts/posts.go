@@ -22,25 +22,25 @@ func NewPostsHandler(service posts.Posts, useAuthMiddleware *middlewares.UseAuth
 
 func (h *PostsHandler) RegisterHandler(router *httprouter.Router) {
 	//get all posts
-	router.GET("/api/posts", h.getAllPosts)
+	router.GET("/api/posts", middlewares.EnableCors(h.getAllPosts))
 	//create new post
-	router.POST("/api/posts", h.createPost)
+	router.POST("/api/posts", middlewares.EnableCors(h.createPost))
 	//get post by id
-	router.GET("/api/posts/:id", h.getPost)
+	router.GET("/api/posts/:id", middlewares.EnableCors(h.getPost))
 	//update post by id
-	router.PATCH("/api/posts/:id", h.updatePost)
+	router.PATCH("/api/posts/:id", middlewares.EnableCors(h.updatePost))
 	//delete post by id
-	router.DELETE("/api/posts/:id", h.deletePost)
+	router.DELETE("/api/posts/:id", middlewares.EnableCors(h.deletePost))
 	//get all messages
-	router.GET("/api/posts/:id/messages", h.getAllMessages)
+	router.GET("/api/posts/:id/messages", middlewares.EnableCors(h.getAllMessages))
 	//create new message
-	router.POST("/api/posts/:id/messages", h.createMessage)
+	router.POST("/api/posts/:id/messages", middlewares.EnableCors(h.createMessage))
 	//get message by id
-	router.GET("/api/posts/:id/messages/:messageId", h.getMessage)
+	router.GET("/api/posts/:id/messages/:messageId", middlewares.EnableCors(h.getMessage))
 	//update message by id
-	router.PATCH("/api/posts/:id/messages/:messageId", h.updateMessage)
+	router.PATCH("/api/posts/:id/messages/:messageId", middlewares.EnableCors(h.updateMessage))
 	//delete message by id
-	router.DELETE("/api/posts/:id/messages/:messageId", h.deleteMessage)
+	router.DELETE("/api/posts/:id/messages/:messageId", middlewares.EnableCors(h.deleteMessage))
 }
 
 func (h *PostsHandler) getAllPosts(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
