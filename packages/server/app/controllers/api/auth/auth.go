@@ -53,7 +53,7 @@ func (h *AuthHandler) register(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	middlewares.UseJSONContentType(w)
-	http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds})
+	http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds, Secure: true, SameSite: http.SameSiteNoneMode})
 	err = json.NewEncoder(w).Encode(tokens.AccessToken)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -83,7 +83,7 @@ func (h *AuthHandler) login(w http.ResponseWriter, r *http.Request, _ httprouter
 	}
 
 	middlewares.UseJSONContentType(w)
-	http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds})
+	http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds, Secure: true, SameSite: http.SameSiteNoneMode})
 	err = json.NewEncoder(w).Encode(tokens.AccessToken)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -119,7 +119,7 @@ func (h *AuthHandler) refresh(w http.ResponseWriter, r *http.Request, _ httprout
 	}
 
 	middlewares.UseJSONContentType(w)
-	http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds})
+	http.SetCookie(w, &http.Cookie{Name: "refreshToken", Value: tokens.RefreshToken, HttpOnly: true, Path: "/api", MaxAge: tokensService.RefreshTokenExpirationSeconds, Secure: true, SameSite: http.SameSiteNoneMode})
 	err = json.NewEncoder(w).Encode(tokens.AccessToken)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
