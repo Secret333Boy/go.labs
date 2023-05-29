@@ -26,15 +26,15 @@ func (pr *PostRepository) FindAllPosts(limit int, offset int) []models.Post {
 	return posts
 }
 
-func (pr *PostRepository) FindOnePost(id int) *models.Post {
+func (pr *PostRepository) FindOnePost(id int) (*models.Post, error) {
 	post := &models.Post{}
 	result := pr.DB.First(post, id)
 	if result.Error != nil {
 		fmt.Println(result.Error)
-		return nil
+		return nil, result.Error
 	}
 	//TODO: return 404
-	return post
+	return post, nil
 }
 
 func (pr *PostRepository) CreatePost(account *models.Account, title string, description string) error {

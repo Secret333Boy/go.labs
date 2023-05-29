@@ -7,6 +7,7 @@ import (
 
 type Message struct {
 	gorm.Model
+	ID          int
 	AccountID   uint
 	PostID      uint
 	Text        string

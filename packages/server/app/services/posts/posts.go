@@ -8,7 +8,7 @@ import (
 
 type postRepository interface {
 	FindAllPosts(limit int, offset int) []models.Post
-	FindOnePost(id int) *models.Post
+	FindOnePost(id int) (*models.Post, error)
 	CreatePost(account *models.Account, title string, description string) error
 	UpdatePost(post *models.Post, account *models.Account, title string, description string) error
 	RemovePost(post *models.Post, account *models.Account) error
@@ -32,7 +32,7 @@ func NewPostsService(postRepository postRepository, messageRepository messageRep
 
 type Posts interface {
 	GetAllPosts(limit int, offset int) []models.Post
-	GetOnePost(id int) *models.Post
+	GetOnePost(id int) (*models.Post, error)
 	AddPost(account *models.Account, title string, description string) error
 	UpdatePost(account *models.Account, id int, title string, description string) error
 	RemovePost(account *models.Account, id int) error
@@ -48,7 +48,7 @@ func (p *postsService) GetAllPosts(limit int, offset int) []models.Post {
 	return p.postRepository.FindAllPosts(limit, offset)
 }
 
-func (p *postsService) GetOnePost(id int) *models.Post {
+func (p *postsService) GetOnePost(id int) (*models.Post, error) {
 	return p.postRepository.FindOnePost(id)
 }
 
@@ -57,18 +57,18 @@ func (p *postsService) AddPost(account *models.Account, title string, descriptio
 }
 
 func (p *postsService) UpdatePost(account *models.Account, id int, title string, description string) error {
-	post := p.GetOnePost(id)
+	post, _ := p.GetOnePost(id)
 	return p.postRepository.UpdatePost(post, account, title, description)
 }
 
 func (p *postsService) RemovePost(account *models.Account, id int) error {
-	post := p.GetOnePost(id)
+	post, _ := p.GetOnePost(id)
 	return p.postRepository.RemovePost(post, account)
 }
 
 func (p *postsService) GetAllMessagesByPostId(postId int, limit int, offset int) ([]models.Message, error) {
 
-	post := p.GetOnePost(postId)
+	post, _ := p.GetOnePost(postId)
 
 	if post == nil {
 		return nil, errors.New("This post is not exist")
@@ -78,7 +78,7 @@ func (p *postsService) GetAllMessagesByPostId(postId int, limit int, offset int)
 }
 
 func (p *postsService) GetOneMessageByPostId(postId int, messageId int) (*models.Message, error) {
-	post := p.GetOnePost(postId)
+	post, _ := p.GetOnePost(postId)
 
 	if post == nil {
 		return nil, errors.New("This post is not exist")
@@ -88,7 +88,7 @@ func (p *postsService) GetOneMessageByPostId(postId int, messageId int) (*models
 }
 
 func (p *postsService) AddMessageByPostId(account *models.Account, postId int, text string) error {
-	post := p.GetOnePost(postId)
+	post, _ := p.GetOnePost(postId)
 
 	if post == nil {
 		return errors.New("This post is not exist")
@@ -99,7 +99,7 @@ func (p *postsService) AddMessageByPostId(account *models.Account, postId int, t
 }
 
 func (p *postsService) UpdateMessageByPostId(account *models.Account, postId int, messageId int, text string) error {
-	post := p.GetOnePost(postId)
+	post, _ := p.GetOnePost(postId)
 
 	if post == nil {
 		return errors.New("post not found")
@@ -114,7 +114,7 @@ func (p *postsService) UpdateMessageByPostId(account *models.Account, postId int
 }
 
 func (p *postsService) RemoveMessageByPostId(account *models.Account, postId int, messageId int) error {
-	post := p.GetOnePost(postId)
+	post, _ := p.GetOnePost(postId)
 
 	if post == nil {
 		return errors.New("post not found")

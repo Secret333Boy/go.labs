@@ -7,6 +7,7 @@ import (
 
 type Post struct {
 	gorm.Model
+	ID          int
 	AccountID   uint
 	Title       string
 	Description string
